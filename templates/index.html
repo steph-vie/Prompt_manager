@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<a href="{{ url_for('add') }}" class="btn btn-primary mb-3">+ Nouveau prompt</a>
+<form method="get" class="mb-3">
+  <div class="input-group">
+    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Recherche dans le titre ou le prompt...">
+    <button class="btn btn-outline-primary" type="submit">Rechercher</button>
+  </div>
+</form>
+<div class="mb-3">
+  <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+    <strong>Filtrer par tag :</strong>
+    {% for tag_option in tags %}
+      <button type="submit" name="tag" value="{{ tag_option.strip() }}"
+              class="btn {% if tag_option.strip() == selected_tag %}btn-primary{% else %}btn-outline-secondary{% endif %} btn-sm">
+        {{ tag_option.strip() }}
+      </button>
+    {% endfor %}
+    {% if selected_tag %}
+      <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-danger ms-2">Réinitialiser</a>
+    {% endif %}
+  </form>
+</div>
+<div class="row row-cols-1 row-cols-md-2 g-4">
+
+  <BR>
+  {% for prompt in prompts %}
+  <div class="col">
+    <div class="card h-100">
+      {% if prompt.image_filename %}
+        <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}" class="card-img-top" alt="Prompt Image">
+      {% endif %}
+      <div class="card-body">
+        <h5 class="card-title">{{ prompt.title }}</h5>
+        <p class="card-text text-muted">{{ prompt.tags }}</p>
+        <a href="{{ url_for('view', prompt_id=prompt.id) }}" class="btn btn-outline-secondary btn-sm">Voir</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

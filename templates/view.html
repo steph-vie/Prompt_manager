@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  {% if prompt.image_filename %}
+    <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}" class="card-img-top" alt="Prompt Image">
+  {% endif %}
+  <div class="card-body">
+    <h3 class="card-title">{{ prompt.title }}</h3>
+    <p><strong>Tags :</strong> {{ prompt.tags }}</p>
+    <pre>{{ prompt.prompt }}</pre>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">← Retour</a>
+    <div class="mt-4 d-flex gap-2">
+  <a href="{{ url_for('edit', prompt_id=prompt.id) }}" class="btn btn-warning">Modifier</a>
+  <form method="POST" action="{{ url_for('delete', prompt_id=prompt.id) }}" onsubmit="return confirm('Supprimer ce prompt ?');">
+    <button type="submit" class="btn btn-danger">Supprimer</button>
+  </form>
+</div>
+  </div>
+</div>
+{% endblock %}

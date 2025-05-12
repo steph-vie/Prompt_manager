@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Modifier le prompt</h2>
+<form method="POST" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label class="form-label">Titre</label>
+    <input type="text" name="title" class="form-control" value="{{ prompt.title }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Prompt</label>
+    <textarea name="prompt" class="form-control" rows="5" required>{{ prompt.prompt }}</textarea>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Tags (séparés par des virgules)</label>
+    <input type="text" name="tags" class="form-control" value="{{ prompt.tags }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Image d'illustration (laisser vide pour conserver l'image actuelle)</label>
+    <input type="file" name="image" class="form-control">
+    {% if prompt.image_filename %}
+      <p class="mt-2">Image actuelle :<br><img src="{{ url_for('static', filename='uploads/' ~ prompt.image_filename) }}" class="img-fluid rounded mt-1" style="max-width: 200px;"></p>
+    {% endif %}
+  </div>
+  <button type="submit" class="btn btn-primary">Enregistrer</button>
+  <a href="{{ url_for('view', prompt_id=prompt.id) }}" class="btn btn-secondary">Annuler</a>
+</form>
+{% endblock %}
