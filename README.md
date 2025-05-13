@@ -17,3 +17,13 @@ Une mini application Flask pour organiser vos prompts de génération d'images (
 - SQLite (base de données locale)
 - SQLAlchemy
 - Bootstrap (CDN)
+
+1. **Clone du dépôt** :
+   ```bash
+   git clone https://github.com/votre-utilisateur/prompt-library.git
+   cd prompt-library
+
+2. **Création d’un environnement virtuel** :
+ ```bash
+  python3 -m venv venv
+  source venv/bin/activate
