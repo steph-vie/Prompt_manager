@@ -12,7 +12,7 @@
     <strong>Filtrer par tag :</strong>
     {% for tag_option in tags %}
       <button type="submit" name="tag" value="{{ tag_option.strip() }}"
-              class="btn {% if tag_option.strip() == selected_tag %}btn-primary{% else %}btn-outline-secondary{% endif %} btn-sm">
+              class="btn {% if tag_option.strip() == selected_tag %}btn-primary{% else %}btn-outline-secondary{% endif %} btn-lg">
         {{ tag_option.strip() }}
       </button>
     {% endfor %}
@@ -21,18 +21,20 @@
     {% endif %}
   </form>
 </div>
-<div class="row row-cols-1 row-cols-md-2 g-4">
-
-  <BR>
+<div class="row row-cols-4 row-cols-md-5 g-4">
   {% for prompt in prompts %}
   <div class="col">
-    <div class="card h-100">
+    <div class="card h-100 shadow-sm">
       {% if prompt.image_filename %}
-        <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}" class="card-img-top" alt="Prompt Image">
+        <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}" class="card-img-top" alt="Prompt Image" style="object-fit: cover; height: 150px;">
       {% endif %}
-      <div class="card-body">
-        <h5 class="card-title">{{ prompt.title }}</h5>
-        <p class="card-text text-muted">{{ prompt.tags }}</p>
+      <div class="card-body p-2">
+        <h6 class="card-title mb-1 text-truncate">{{ prompt.title }}</h6>
+         <div class="mb-2">
+          {% for tag in (prompt.tags or '').split(',') %}
+            <span class="badge bg-secondary me-1">{{ tag.strip() }}</span>
+          {% endfor %}
+        </div>
         <a href="{{ url_for('view', prompt_id=prompt.id) }}" class="btn btn-outline-secondary btn-sm">Voir</a>
       </div>
     </div>
