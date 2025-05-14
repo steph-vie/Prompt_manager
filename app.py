@@ -1,4 +1,5 @@
 import os
+import uuid
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
@@ -52,7 +53,8 @@ def add():
 
         filename = None
         if image and image.filename != '':
-            filename = secure_filename(image.filename)
+            ext = os.path.splitext(image.filename)[1]
+            filename = f"{uuid.uuid4().hex}{ext}"
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
         new_prompt = Prompt(title=title, prompt=prompt_text, tags=tags, image_filename=filename)
