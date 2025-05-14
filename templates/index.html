@@ -37,6 +37,9 @@
         </div>
         <a href="{{ url_for('view', prompt_id=prompt.id) }}" class="btn btn-outline-secondary btn-sm">Voir</a>
       </div>
+      <div class="card-footer text-muted small text-start px-2">
+        {{ prompt.created_at.strftime('%d/%m/%Y') }}
+      </div>
     </div>
   </div>
   {% endfor %}
