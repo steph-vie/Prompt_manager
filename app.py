@@ -19,6 +19,7 @@ class Prompt(db.Model):
     prompt = db.Column(db.Text, nullable=False)
     tags = db.Column(db.String(120), nullable=True)
     image_filename = db.Column(db.String(120), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 with app.app_context():
     db.create_all()
