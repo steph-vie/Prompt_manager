@@ -2,11 +2,11 @@ version: '3'
 services:
   app:
     build: .
-    container_name: homepage
+    container_name: pompt_manager
     ports:
       - 5000:5000
     volumes:
-      - ./static/uploads:/app/static/uploads
-      - ./prompts.db:/app/prompts.db
+      - /home/pi/docker/prompt_manger:/app/static/uploads
+      - /home/pi/docker/prompt_manger/prompts.db:/app/prompts.db
 
     restart: unless-stopped
