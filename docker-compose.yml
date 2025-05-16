@@ -2,7 +2,7 @@ version: '3'
 services:
   app:
     build: .
-    container_name: pompt_manager
+    container_name: prompt_manager
     ports:
       - 5000:5000
     volumes:
