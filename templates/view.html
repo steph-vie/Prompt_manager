@@ -1,12 +1,20 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="card">
-
-  <div class="card-body">
-    <h2 class="card-title">{{ prompt.title }}</h2>
+<div class="row">
+    <div class="col-md-4">
+      {% if prompt.image_filename %}
+        <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}" class="card-img-top" alt="Prompt Image">
+      {% endif %}
+    </div>
+    <div class="col-md-8">
+    <h1 class="display-6">{{ prompt.title }}</h1>
     
     <pre>{{ prompt.prompt }}</pre>
-    <p><strong>Tags :</strong> {{ prompt.tags }}</p>
+    <p><strong>Tags :</strong>
+      {% for tag in (prompt.tags or '').split(',') %}
+      <span class="btn btn-outline-secondary btn-sm">{{ tag.strip() }}</span>
+      {% endfor %}
+      </p>
     <a href="{{ url_for('index') }}" class="btn btn-secondary">← Retour</a>
     <div class="mt-4 d-flex gap-2">
   <a href="{{ url_for('edit', prompt_id=prompt.id) }}" class="btn btn-warning">Modifier</a>
@@ -15,8 +23,6 @@
   </form>
 </div>
   </div>
-    {% if prompt.image_filename %}
-    <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}" class="card-img-top" alt="Prompt Image">
-  {% endif %}
+
 </div>
 {% endblock %}

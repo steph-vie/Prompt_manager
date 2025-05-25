@@ -5,6 +5,8 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'toto'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///prompts.db'
@@ -22,9 +24,14 @@ class Prompt(db.Model):
     image_filename = db.Column(db.String(120), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def __repr__(self):
+        return f'<Prompt {self.title}>'
+
 with app.app_context():
     db.create_all()
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 @app.route('/')
 def index():
     tag = request.args.get('tag')
@@ -38,6 +45,7 @@ def index():
     prompts = prompts.order_by(Prompt.id.desc()).all()
 
     tags = sorted(set(tag for p in Prompt.query.all() for tag in (p.tags or '').split(',')))
+    print(tags)
     return render_template('index.html', prompts=prompts, tags=tags, selected_tag=tag, query=query or '')
 
 @app.route('/prompt/<int:prompt_id>')
@@ -51,15 +59,17 @@ def add():
         title = request.form['title']
         prompt_text = request.form['prompt']
         tags = request.form['tags']
+        # Nettoyage des tags
+        tags_clean = ','.join([tag.strip().lower() for tag in tags.split(',')])
         image = request.files['image']
 
         filename = None
-        if image and image.filename != '':
+        if image and allowed_file(image.filename):
             ext = os.path.splitext(image.filename)[1]
-            filename = f"{uuid.uuid4().hex}{ext}"
+            filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-        new_prompt = Prompt(title=title, prompt=prompt_text, tags=tags, image_filename=filename)
+        new_prompt = Prompt(title=title, prompt=prompt_text, tags=tags_clean, image_filename=filename)
         db.session.add(new_prompt)
         db.session.commit()
         return redirect(url_for('index'))
@@ -72,10 +82,13 @@ def edit(prompt_id):
     if request.method == 'POST':
         prompt.title = request.form['title']
         prompt.prompt = request.form['prompt']
-        prompt.tags = request.form['tags']
+        tags = request.form['tags']
+        # Nettoyage des tags
+        tags_clean = ','.join([tag.strip().lower() for tag in tags.split(',')])
+        prompt.tags = tags_clean
 
         image = request.files['image']
-        if image and image.filename != '':
+        if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             prompt.image_filename = filename
