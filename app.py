@@ -16,6 +16,7 @@ db = SQLAlchemy(app)
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
+
 class Prompt(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
@@ -27,11 +28,17 @@ class Prompt(db.Model):
     def __repr__(self):
         return f'<Prompt {self.title}>'
 
+
 with app.app_context():
     db.create_all()
 
+
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return ('.' in filename
+            and filename.rsplit('.', 1)[1].lower()
+            in ALLOWED_EXTENSIONS)
+
+
 @app.route('/')
 def index():
     tag = request.args.get('tag')
@@ -41,17 +48,31 @@ def index():
     if tag:
         prompts = prompts.filter(Prompt.tags.like(f'%{tag}%'))
     if query:
-        prompts = prompts.filter((Prompt.title.contains(query)) | (Prompt.prompt.contains(query)))
+        prompts = (
+            prompts.filter((Prompt.title.contains(query))
+                           | (Prompt.prompt.contains(query)))
+        )
     prompts = prompts.order_by(Prompt.id.desc()).all()
 
-    tags = sorted(set(tag for p in Prompt.query.all() for tag in (p.tags or '').split(',')))
-    print(tags)
-    return render_template('index.html', prompts=prompts, tags=tags, selected_tag=tag, query=query or '')
+    all_tags = (
+        tag
+        for p in Prompt.query.all()
+        for tag in (p.tags or '').split(',')
+    )
+    tags = sorted(set(all_tags))
+
+    return render_template('index.html',
+                           prompts=prompts,
+                           tags=tags,
+                           selected_tag=tag,
+                           query=query or '')
+
 
 @app.route('/prompt/<int:prompt_id>')
 def view(prompt_id):
     prompt = Prompt.query.get_or_404(prompt_id)
     return render_template('view.html', prompt=prompt)
+
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
@@ -69,12 +90,16 @@ def add():
             filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-        new_prompt = Prompt(title=title, prompt=prompt_text, tags=tags_clean, image_filename=filename)
+        new_prompt = Prompt(title=title,
+                            prompt=prompt_text,
+                            tags=tags_clean,
+                            image_filename=filename)
         db.session.add(new_prompt)
         db.session.commit()
         return redirect(url_for('index'))
 
     return render_template('add.html')
+
 
 @app.route('/edit/<int:prompt_id>', methods=['GET', 'POST'])
 def edit(prompt_id):
@@ -98,12 +123,14 @@ def edit(prompt_id):
 
     return render_template('edit.html', prompt=prompt)
 
+
 @app.route('/delete/<int:prompt_id>', methods=['POST'])
 def delete(prompt_id):
     prompt = Prompt.query.get_or_404(prompt_id)
     if prompt.image_filename:
         try:
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], prompt.image_filename))
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'],
+                                   prompt.image_filename))
         except FileNotFoundError:
             pass
     db.session.delete(prompt)
