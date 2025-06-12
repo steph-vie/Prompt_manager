@@ -9,7 +9,7 @@
     <div class="col-md-8">
     <h1 class="display-6">{{ prompt.title }}</h1>
     
-    <pre>{{ prompt.prompt }}</pre>
+    <pre class="wrapped-text">{{ prompt.prompt }}</pre>
     <p><strong>Tags :</strong>
       {% for tag in (prompt.tags or '').split(',') %}
       <span class="btn btn-outline-secondary btn-sm">{{ tag.strip() }}</span>
