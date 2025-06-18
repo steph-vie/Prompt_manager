@@ -24,6 +24,7 @@ jobs:
 
     - name: Create pylint score badge
       run: |
+        mkdir -p badges
         SCORE=$(grep "Your code has been rated at" pylint.log | tail -1 | awk '{print $7}' | cut -d/ -f1)
         echo "score=${SCORE}" >> $GITHUB_ENV
 
