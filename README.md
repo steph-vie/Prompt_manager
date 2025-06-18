@@ -1,3 +1,5 @@
+![Pylint 3.9](https://github.com/steph_vie/Prompt_manager/raw/main/badges/pylint-3.9.svg)
+![Pylint 3.10](https://github.com/steph_vie/Prompt_manager/raw/main/badges/pylint-3.10.svg)
 # 📸 Prompt Library – Gestionnaire de Prompts pour la Génération d'Images
 
 Une mini application Flask pour organiser vos prompts de génération d'images (ex. : ComfyUI, Stable Diffusion). Chaque prompt peut être tagué, accompagné d'une image d'exemple et recherché par mots-clés.

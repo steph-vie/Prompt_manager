@@ -20,4 +20,17 @@ jobs:
         pip install pylint flask flask_sqlalchemy flask_wtf wtforms
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py')
+        pylint $(git ls-files '*.py') --exit-zero > pylint.log
+
+    - name: Create pylint score badge
+      run: |
+        SCORE=$(grep "Your code has been rated at" pylint.log | tail -1 | awk '{print $7}' | cut -d/ -f1)
+        echo "score=${SCORE}" >> $GITHUB_ENV
+
+    - name: Upload badge
+      uses: emibcn/badge-action@v2
+      with:
+        label: "pylint ${{ matrix.python-version }}"
+        status: "${{ env.score }}/10"
+        color: "brightgreen"
+        path: "badges/pylint-${{ matrix.python-version }}.svg"
