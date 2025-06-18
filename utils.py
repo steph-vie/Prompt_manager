@@ -1,3 +1,5 @@
+"""Liste des fonctions utilitaires de l'application"""
+
 from config import ALLOWED_EXTENSIONS
 
 

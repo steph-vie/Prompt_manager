@@ -1,5 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
+"""Definition des modeles presents dans l'application"""
+
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
 
 
 db = SQLAlchemy()

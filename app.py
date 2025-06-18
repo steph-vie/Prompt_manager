@@ -1,3 +1,5 @@
+"""Application principale"""
+
 import os
 from flask import Flask
 from config import Config
@@ -6,6 +8,9 @@ from routes import register_routes
 
 
 def create_app():
+    """
+    Initialisation de l'application
+    """
     app = Flask(__name__)
     app.config.from_object(Config)
 
@@ -24,6 +29,6 @@ def create_app():
 
 if __name__ == '__main__':
     # Creation de l'app
-    app = create_app()
+    appli = create_app()
     # Lance l’application Flask en mode debug
-    app.run(debug=True)
+    appli.run(debug=True)

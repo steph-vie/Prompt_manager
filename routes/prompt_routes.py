@@ -1,3 +1,5 @@
+"""Liste de toutes les routes de l'application"""
+
 import os
 import uuid
 from flask import (
