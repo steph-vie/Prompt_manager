@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint flask
+        pip install pylint flask flask_sqlalchemy flask_wtf wtforms
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py')
