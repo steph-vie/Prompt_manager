@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 
-class Prompt(db.Model):
+class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     """
     Modèle représentant un prompt dans la base de données.
     Contient un titre, le texte du prompt, des tags, un fichier image associé

@@ -10,7 +10,7 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 
-class Config:
+class Config:  # pylint: disable=too-few-public-methods
     """
     Definition des valeurs
     """
