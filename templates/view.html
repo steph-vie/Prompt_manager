@@ -15,10 +15,10 @@
       <span class="btn btn-outline-secondary btn-sm">{{ tag.strip() }}</span>
       {% endfor %}
       </p>
-    <a href="{{ url_for('index') }}" class="btn btn-secondary">← Retour</a>
+    <a href="{{ url_for('prompt.index') }}" class="btn btn-secondary">← Retour</a>
     <div class="mt-4 d-flex gap-2">
-  <a href="{{ url_for('edit', prompt_id=prompt.id) }}" class="btn btn-warning">Modifier</a>
-  <form method="POST" action="{{ url_for('delete', prompt_id=prompt.id) }}" onsubmit="return confirm('Supprimer ce prompt ?');">
+  <a href="{{ url_for('prompt.edit', prompt_id=prompt.id) }}" class="btn btn-warning">Modifier</a>
+  <form method="POST" action="{{ url_for('prompt.delete', prompt_id=prompt.id) }}" onsubmit="return confirm('Supprimer ce prompt ?');">
     <button type="submit" class="btn btn-danger">Supprimer</button>
   </form>
 </div>

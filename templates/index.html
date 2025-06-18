@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<a href="{{ url_for('add') }}" class="btn btn-primary mb-3">+ Nouveau prompt</a>
+<a href="{{ url_for('prompt.add') }}" class="btn btn-primary mb-3">+ Nouveau prompt</a>
 <form method="get" class="mb-3">
   <div class="input-group">
     <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Recherche dans le titre ou le prompt...">
@@ -17,7 +17,7 @@
       </button>
     {% endfor %}
     {% if selected_tag %}
-      <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-danger ms-2">Réinitialiser</a>
+      <a href="{{ url_for('prompt.index') }}" class="btn btn-sm btn-outline-danger ms-2">Réinitialiser</a>
     {% endif %}
   </form>
 </div>
@@ -35,7 +35,7 @@
             <span class="badge bg-secondary me-1">{{ tag.strip() }}</span>
           {% endfor %}
         </div>
-        <a href="{{ url_for('view', prompt_id=prompt.id) }}" class="btn btn-outline-secondary btn-sm">Voir</a>
+        <a href="{{ url_for('prompt.view', prompt_id=prompt.id) }}" class="btn btn-outline-secondary btn-sm">Voir</a>
       </div>
       <div class="card-footer text-muted small text-start px-2 fw-lighter">
         {{ prompt.created_at.strftime('%d/%m/%Y') }}

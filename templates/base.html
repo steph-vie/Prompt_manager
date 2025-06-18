@@ -10,11 +10,17 @@
       <h1 class="my-4 text-center">🎨 Prompt Manager</h1>
     </div>
     <div class="container-fluid mt-4 px-5">
-
+      <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+        </div>
       {% block content %}{% endblock %}
     </div>
     <footer class="bg-body-secondary text-center fixed-bottom gap-2">
-      <p>Copyright © 2025 Tous droits réservés. V 1.5.1</p>
+      <p>Copyright © 2025 Tous droits réservés. V 1.6</p>
     </footer>
   </body>
 </html>

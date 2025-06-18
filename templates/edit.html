@@ -22,6 +22,6 @@
     {% endif %}
   </div>
   <button type="submit" class="btn btn-primary">Enregistrer</button>
-  <a href="{{ url_for('view', prompt_id=prompt.id) }}" class="btn btn-secondary">Annuler</a>
+  <a href="{{ url_for('prompt.view', prompt_id=prompt.id) }}" class="btn btn-secondary">Annuler</a>
 </form>
 {% endblock %}
