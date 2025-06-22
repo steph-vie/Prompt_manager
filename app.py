@@ -18,6 +18,9 @@ def create_app():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
 
+    if not os.path.exists(app.config['DB_FOLDER']):
+        os.makedirs(app.config['DB_FOLDER'])
+
     db.init_app(app)
     register_routes(app)
 

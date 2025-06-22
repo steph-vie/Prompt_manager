@@ -1,3 +1,4 @@
 static/uploads/*
 instance/
 __pycache__
+database/
