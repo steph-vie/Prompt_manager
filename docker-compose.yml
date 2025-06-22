@@ -4,9 +4,9 @@ services:
     build: .
     container_name: prompt_manager
     ports:
-      - 5000:5000
+      - ${HOST_PORT}:5000
     volumes:
-      - /home/steph/docker/prompt_manger/static/uploads:/app/static/uploads
-      - /home/steph/docker/prompt_manger/database:/app/instance
+      - ${DIR_BASE}/prompt_manger/static/uploads:/app/static/uploads
+      - ${DIR_BASE}/prompt_manger/database:/app/database
 
     restart: unless-stopped
