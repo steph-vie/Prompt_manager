@@ -35,7 +35,7 @@ def index():
         )
 
     pagination = prompts_query.order_by(Prompt.id.desc()).paginate(page=page,
-                                                                   per_page=10)
+                                                                   per_page=12)
     prompts = pagination.items
 
     all_tags = set(
