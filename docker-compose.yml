@@ -6,7 +6,7 @@ services:
     ports:
       - 5000:5000
     volumes:
-      - /home/pi/docker/prompt_manger/static/uploads:/app/static/uploads
-      - /home/pi/docker/prompt_manger/database:/app/instance
+      - /home/steph/docker/prompt_manger/static/uploads:/app/static/uploads
+      - /home/steph/docker/prompt_manger/database:/app/instance
 
     restart: unless-stopped
