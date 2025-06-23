@@ -21,25 +21,3 @@ jobs:
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py') --exit-zero > pylint.log
-
-    - name: Extract Pylint score and prepare badge
-      run: |
-        mkdir -p badges
-        SCORE=$(grep "Your code has been rated at" pylint.log | tail -1 | awk '{print $7}' | cut -d/ -f1)
-        echo "score=${SCORE}" >> $GITHUB_ENV
-
-    - name: Generate badge
-      uses: emibcn/badge-action@v2
-      with:
-        label: "pylint ${{ matrix.python-version }}"
-        status: "${{ env.score }}/10"
-        color: "brightgreen"
-        path: "badges/pylint-${{ matrix.python-version }}.svg"
-
-    - name: Commit badge to repository
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add badges/
-        git commit -m "Update pylint badge for Python ${{ matrix.python-version }} [ci skip]" || echo "No changes to commit"
-        git push
