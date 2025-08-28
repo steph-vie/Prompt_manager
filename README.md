@@ -1,4 +1,4 @@
-# ✏️ Prompt Manager – Gestionnaire de Prompts pour la Génération d'Images
+# 📸 Prompt Library – Gestionnaire de Prompts pour la Génération d'Images
 
 Une mini application Flask pour organiser vos prompts de génération d'images (ex. : ComfyUI, Stable Diffusion). Chaque prompt peut être tagué, accompagné d'une image d'exemple et recherché par mots-clés.
 
@@ -22,8 +22,8 @@ Une mini application Flask pour organiser vos prompts de génération d'images (
 
 1. **Clone du dépôt** :
    ```bash
-   git clone https://github.com/steph-vie/Prompt_manager.git
-   cd Prompt_manager
+   git clone https://github.com/votre-utilisateur/prompt-library.git
+   cd prompt-library
    
 2. **Création d’un environnement virtuel** :
     ```bash
@@ -32,17 +32,13 @@ Une mini application Flask pour organiser vos prompts de génération d'images (
 
 3. **Installation des dépendances** :
    ```bash
-   pip install -r requirement.txt
-   
+   pip install flask flask_sqlalchemy
+
 4. **Lancement de l’application** :
    ```bash
-   python app.py
+   flask run
    
 L'application sera accessible à l'adresse : http://127.0.0.1:5000
 
-## 📦 Utilisation avec Docker
-Modifier les fichiers `docker-compose.yml` et `.env` en conséquence
-
 ## 📝 Licence
 Ce projet est open source et distribué sous licence MIT.
-
