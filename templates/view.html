@@ -8,43 +8,55 @@
     </div>
     <div class="col-md-8">
     <h1 class="display-6">{{ prompt.title }}</h1>
+
     
-    <pre class="wrapped-text border border-success-subtle text-success rounded-2 border-2 p-2 mb-4" style="--bs-text-opacity: .5;">{{ prompt.prompt }}</pre>
+    <pre class="wrapped-text border border-success-subtle text-success rounded-2 border-2 p-2 my-4" style="--bs-text-opacity: .5;">{{ prompt.prompt }}</pre>
+
     <p><strong>Tags :</strong>
       {% for tag in (prompt.tags or '').split(',') %}
       <span class="btn btn-outline-secondary btn-sm">{{ tag.strip() }}</span>
       {% endfor %}
       </p>
         <p>
+        <div class="hstack gap-2">
         <strong>Seed :</strong>
         <span class="btn border">
         {{ prompt.seed }}
             </span>
+
         <strong>Steps :</strong>
         <span class="btn border">
             {{ prompt.steps }}
         </span>
+
         <strong>Checkpoint :</strong>
         <span class="btn border">
             {{ prompt.checkpoint }}
           </span>
+            </div>
         </p>
-        <p><strong>Loras :</strong>
-            {% for lora in (prompt.loras or '').split(',') %}
-            <span class="btn border">{{ lora.strip() }}</span>
-            {% endfor %}
-          </p>
+        <p>
 
+        <strong>Loras :</strong>
+            {% for lora in (prompt.loras or '').split(',') %}
+            {% if lora != "None" %}
+            <span class="btn border">{{ lora.strip() }}</span>
+            {% endif %}
+            {% endfor %}
+
+
+        </p>
         <pre class="wrapped-text border border-danger-subtle border-2 text-danger rounded-2 p-2 mb-4" style="--bs-text-opacity: .5;">{{ prompt.neg_prompt }}</pre>
 
-
+    <div class="hstack gap-1">
     <a href="{{ url_for('prompt.index') }}" class="btn btn-secondary">← Retour</a>
-    <div class="mt-4 d-flex gap-2">
   <a href="{{ url_for('prompt.edit', prompt_id=prompt.id) }}" class="btn btn-warning">Modifier</a>
-  <form method="POST" action="{{ url_for('prompt.delete', prompt_id=prompt.id) }}" onsubmit="return confirm('Supprimer ce prompt ?');">
+        <form method="POST" action="{{ url_for('prompt.delete', prompt_id=prompt.id) }}" onsubmit="return confirm('Supprimer ce prompt ?');">
     <button type="submit" class="btn btn-danger">Supprimer</button>
   </form>
-</div>
+    </div>
+
+
   </div>
 
 </div>
