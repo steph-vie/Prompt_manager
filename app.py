@@ -2,6 +2,7 @@
 
 import os
 from flask import Flask
+from flask_migrate import Migrate
 from config import Config
 from models import db
 from routes import register_routes
@@ -12,6 +13,7 @@ def create_app():
     Initialisation de l'application
     """
     app = Flask(__name__)
+    migrate = Migrate()
     app.config.from_object(Config)
 
     # Création du dossier d'upload
@@ -22,6 +24,7 @@ def create_app():
         os.makedirs(app.config['DB_FOLDER'])
 
     db.init_app(app)
+    migrate.init_app(app, db)
     register_routes(app)
 
     with app.app_context():

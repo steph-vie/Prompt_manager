@@ -9,7 +9,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from models import db, Prompt
-from utils import allowed_file, clean_tags
+from utils import ComfyUIImage,allowed_file, clean_tags
 
 prompt_bp = Blueprint('prompt', __name__)
 
@@ -74,14 +74,10 @@ def add():
 
     if request.method == 'POST':
         title = request.form['title']
-        prompt_text = request.form['prompt']
         tags = request.form['tags']
 
         if not title.strip():
             flash("Le titre est obligatoire.", "error")
-            return redirect(url_for('.add'))
-        if not prompt_text.strip():
-            flash("Le contenu est obligatoire.", "error")
             return redirect(url_for('.add'))
 
         tags_cleaned = clean_tags(tags)
@@ -93,11 +89,18 @@ def add():
             filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
             image.save(os.path.join(current_app.config['UPLOAD_FOLDER'],
                                     filename))
-
+        image_upload = ComfyUIImage(os.path.join(current_app.config['UPLOAD_FOLDER'],
+                                    filename))
         new_prompt = Prompt(title=title,
-                            prompt=prompt_text,
+                            prompt=image_upload.get_positive_prompt(),
                             tags=tags_cleaned,
-                            image_filename=filename)
+                            image_filename=filename,
+                            seed=image_upload.get_seed(),
+                            steps=image_upload.get_steps(),
+                            checkpoint=image_upload.get_checkpoint(),
+                            loras=str(image_upload.get_loras()),
+                            neg_prompt=image_upload.get_negative_prompt()
+                            )
         db.session.add(new_prompt)
         db.session.commit()
         flash("Prompt ajouté avec succès.", "success")

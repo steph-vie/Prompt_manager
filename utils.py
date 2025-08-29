@@ -1,6 +1,61 @@
 """Liste des fonctions utilitaires de l'application"""
 
 from config import ALLOWED_EXTENSIONS
+import json
+from PIL import Image
+
+class ComfyUIImage:
+    def __init__(self, image_path):
+        self.image_path = image_path
+        self.prompt = self._extract_prompt()
+
+    def _extract_prompt(self):
+        """Extrait le JSON du champ 'prompt' dans les métadonnées PNG"""
+        img = Image.open(self.image_path)
+        raw = img.info.get("prompt") or img.info.get("parameters")
+        if not raw:
+            raise ValueError("❌ Aucun champ 'prompt' trouvé dans l'image.")
+        try:
+            data = json.loads(raw)
+            return data
+        except json.JSONDecodeError:
+            raise ValueError("❌ Impossible de décoder le JSON du champ 'prompt'.")
+
+    def get_value(self, key):
+        """Cherche une clé dans tous les nœuds du prompt (inputs seulement)"""
+        for node in self.prompt.values():
+            value = node.get("inputs", {}).get(key)
+            if value is not None:
+                return value
+        return None
+
+    # Alias pratiques
+    def get_positive_prompt(self):
+        return self.get_value("positive")
+
+    def get_negative_prompt(self):
+        return self.get_value("negative")
+
+    def get_seed(self):
+        return self.get_value("noise_seed")
+
+    def get_steps(self):
+        return self.get_value("steps")
+
+    def get_checkpoint(self):
+        return self.get_value("base_ckpt_name").split("/")[-1].replace(".safetensors", "")
+
+    def get_loras(self):
+        """Retourne toutes les LoRAs trouvées (liste)"""
+        loras = []
+        for node in self.prompt.values():
+            inputs = node.get("inputs", {})
+            for k, v in inputs.items():
+                if k.startswith("lora_name_"):
+                    loras.append(v.split("/")[-1].replace(".safetensors", ""))
+
+        clean_loras = ",".join(lora.strip() for lora in loras)
+        return clean_loras if loras else None
 
 
 def allowed_file(filename):

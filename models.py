@@ -18,6 +18,11 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     prompt = db.Column(db.Text, nullable=False)
     tags = db.Column(db.String(120), nullable=True)
     image_filename = db.Column(db.String(120), nullable=True)
+    seed = db.Column(db.Integer, nullable=True)
+    steps = db.Column(db.Integer, nullable=True)
+    checkpoint = db.Column(db.Text, nullable=True)
+    loras = db.Column(db.Text, nullable=True)
+    neg_prompt = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
