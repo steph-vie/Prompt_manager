@@ -6,6 +6,7 @@ Une mini application Flask pour organiser vos prompts de génération d'images (
 
 - Ajout, édition, suppression de prompts
 - Téléversement d'une image associée à chaque prompt
+- Récuperations de certaines infos "seed, staps, checkpoint, Loras, prompt negatif" depuis les méta-datas
 - Système de tags (filtrage inclus)
 - Recherche par mots-clés (titre ou contenu du prompt)
 - Interface responsive avec Bootstrap 5
