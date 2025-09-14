@@ -1,26 +1,88 @@
 <!doctype html>
+{% from 'macros.html' import render_category_tree %}
+{% from 'macros.html' import render_manage_tree %}
 <html lang="en">
   <head>
-    <title>Prompt Manager</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Prompt Manager{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/stylesheet.css')}}">
   </head>
   <body>
-    <div class="container-fluid">
-      <h1 class="my-4 text-center">🎨 Prompt Manager</h1>
-    </div>
-    <div class="container-fluid mt-4 px-5">
-      <div class="container">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endwith %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('prompt.index') }}">
+                <i class="fas fa-paint-brush"></i> Prompt Manager V3
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('prompt.add') }}">
+                    <i class="fas fa-plus"></i> Nouveau Prompt
+                </a>
+                <a class="nav-link" href="{{ url_for('prompt.manage_categories') }}">
+                    <i class="fas fa-folder"></i> Catégories
+                </a>
+            </div>
         </div>
-      {% block content %}{% endblock %}
+    </nav>
+
+   <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar des catégories -->
+            <div class="col-md-2 sidebar p-3">
+                <h6 class="text-muted text-uppercase mb-3">Catégories</h6>
+
+                <!-- Bouton "Toutes les catégories" -->
+                <div class="category-item {% if not selected_category %}active{% endif %}"
+                     onclick="location.href='{{ url_for('prompt.index') }}'">
+                    <i class="fas fa-home"></i> Toutes les catégories
+                </div>
+
+                <!-- Arbre des catégories -->
+                <div class="category-tree mt-3">
+                    {% for category in category_tree %}
+                        {{ render_category_tree(category, selected_category) }}
+                    {% endfor %}
+                </div>
+
+                <a href="{{ url_for('prompt.new_category') }}" class="btn btn-outline-primary btn-sm m-2">
+                    <i class="fas fa-plus"></i> Nouvelle catégorie
+                </a>
+
+                <hr class="my-3">
+
+                <h6 class="text-muted text-uppercase mb-3"><i class="fa fa-tags"></i>Tags</h6>
+                <div class="mt-3">
+                    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+                {% for tag_option in tags %}
+                    <button type="submit" name="tag" value="{{ tag_option.strip() }}"
+                    class="btn {% if tag_option.strip() == selected_tag %}btn-primary{% else %}btn-outline-secondary{% endif %} btn-sm">
+                    <i class="fa fa-tag"></i> {{ tag_option.strip() }}
+                    </button>
+                    {% endfor %}
+                    {% if selected_tag %}
+                        <a href="{{ url_for('prompt.index') }}" class="btn btn-sm btn-outline-danger ms-2">Réinitialiser</a>
+                    {% endif %}
+                        </form>
+                </div>
+            </div>
+
+            <!-- Contenu principal -->
+            <div class="col-md-9">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
     </div>
-    <footer class="bg-body-secondary text-center fixed-bottom gap-2">
+
+
+    <!-- <footer class="bg-body-secondary text-center fixed-bottom gap-2">
       <p>Copyright © 2025 Tous droits réservés. V 2.1</p>
-    </footer>
+    </footer> -->
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
   </body>
 </html>

@@ -1,6 +1,7 @@
 """Liste des fonctions utilitaires de l'application"""
 
 from config import ALLOWED_EXTENSIONS
+from models import Category
 import json
 from PIL import Image
 
@@ -56,6 +57,55 @@ class ComfyUIImage:
 
         clean_loras = ",".join(lora.strip() for lora in loras)
         return clean_loras if loras else None
+
+class CategoryService:
+
+    @staticmethod
+    def get_tree():
+        """Retourne l'arbre des catégories"""
+        root_categories = Category.query.filter_by(parent_id=None).all()
+        return root_categories
+
+    @staticmethod
+    def build_tree_dict(category):
+        """Construit un dictionnaire récursif pour l'arbre"""
+        return {
+            'id': category.id,
+            'name': category.name,
+            'description': category.description,
+            'children': [CategoryService.build_tree_dict(child)
+                         for child in category.children.all()]
+        }
+
+    @staticmethod
+    def get_category_options():
+        """Retourne les options pour les formulaires (avec indentation)"""
+        options = [('', '-- Aucune catégorie --')]
+
+        def add_category_options(categories, level=0):
+            for category in categories:
+                indent = "　" * level  # Caractère d'espacement japonais pour l'indentation
+                options.append((category.id, f"{indent}{category.name}"))
+                add_category_options(category.children.all(), level + 1)
+
+        root_categories = Category.query.filter_by(parent_id=None).all()
+        add_category_options(root_categories)
+
+        return options
+
+    @staticmethod
+    def move_category(category_id, new_parent_id):
+        """Déplace une catégorie (avec vérification de boucles)"""
+        category = Category.query.get(category_id)
+        new_parent = Category.query.get(new_parent_id) if new_parent_id else None
+
+        # Vérifier qu'on ne crée pas de boucle
+        if new_parent and (new_parent.id == category.id or category.is_ancestor_of(new_parent)):
+            raise ValueError("Impossible de déplacer : cela créerait une boucle")
+
+        category.parent_id = new_parent_id
+        db.session.commit()
+        return True
 
 
 def allowed_file(filename):

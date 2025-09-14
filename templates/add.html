@@ -5,6 +5,14 @@
     <label class="form-label">Titre</label>
     <input type="text" name="title" class="form-control" required>
   </div>
+  <label class="form-label">Categorie</label>
+    <select class="form-select" name="categorie" id="categorie">
+      {% for value, label in liste_categories %}
+      <option value="{{ value }}">
+        {{ label }}
+      </option>
+      {% endfor %}
+    </select>
   <div class="mb-3">
     <label class="form-label">Tags (séparés par virgules)</label>
     <input type="text" name="tags" class="form-control">

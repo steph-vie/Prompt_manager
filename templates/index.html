@@ -1,72 +1,134 @@
 {% extends 'base.html' %}
 {% block content %}
-<a href="{{ url_for('prompt.add') }}" class="btn btn-primary mb-3">+ Nouveau prompt</a>
-<form method="get" class="mb-3">
-  <div class="input-group">
-    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Recherche dans le titre ou le prompt...">
-    <button class="btn btn-outline-primary" type="submit">Rechercher</button>
-  </div>
-</form>
-<div class="mb-3">
-  <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
-    <strong>Filtrer par tag :</strong>
-    {% for tag_option in tags %}
-      <button type="submit" name="tag" value="{{ tag_option.strip() }}"
-              class="btn {% if tag_option.strip() == selected_tag %}btn-primary{% else %}btn-outline-secondary{% endif %} btn-sm">
-        {{ tag_option.strip() }}
-      </button>
-    {% endfor %}
-    {% if selected_tag %}
-      <a href="{{ url_for('prompt.index') }}" class="btn btn-sm btn-outline-danger ms-2">Réinitialiser</a>
+<div class="p-4">
+    <!-- Breadcrumbs -->
+    {% if selected_category %}
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb breadcrumb-category">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('prompt.index') }}">Accueil</a>
+                </li>
+                {% set path_parts = selected_category.get_path().split(' > ') %}
+                {% for part in path_parts[:-1] %}
+                    <li class="breadcrumb-item">{{ part }}</li>
+                {% endfor %}
+                <li class="breadcrumb-item active">{{ path_parts[-1] }}</li>
+            </ol>
+        </nav>
     {% endif %}
-  </form>
-</div>
-<div class="row row-cols-6 row-cols-md-7 g-4">
-  {% for prompt in prompts %}
-  <div class="col">
-    <div class="card h-100 shadow-sm">
-      {% if prompt.image_filename %}
-        <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}" class="card-img-top" alt="Prompt Image" style="object-fit: cover; height: 200px;">
-      {% endif %}
-      <div class="card-body p-2">
-        <h6 class="card-title mb-1 text-truncate">{{ prompt.title }}</h6>
-         <div class="mb-2">
-          {% for tag in (prompt.tags or '').split(',') %}
-            <span class="badge bg-secondary me-1">{{ tag.strip() }}</span>
-          {% endfor %}
-        </div>
-        <a href="{{ url_for('prompt.view', prompt_id=prompt.id) }}" class="btn btn-outline-secondary btn-sm">Voir</a>
-      </div>
-      <div class="card-footer text-muted small text-start px-2 fw-lighter">
-        {{ prompt.created_at.strftime('%d/%m/%Y') }}
-      </div>
+  <!-- En-tête avec recherche -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            {% if selected_category %}
+                {{ selected_category.name }}
+                {% if selected_category.description %}
+                    <small class="text-muted">{{ selected_category.description }}</small>
+                {% endif %}
+            {% else %}
+                Tous les prompts
+            {% endif %}
+        </h2>
+
+        <!-- Barre de recherche -->
+        <form method="GET" class="d-flex">
+            {% if selected_category %}
+                <input type="hidden" name="category_id" value="{{ selected_category.id }}">
+            {% endif %}
+            <input type="search" name="q" value="{{ search }}"
+                   placeholder="Rechercher..." class="form-control me-2">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
     </div>
-  </div>
-  {% endfor %}
-</div>
-<div class="d-flex justify-content-center mt-4 mb-5">
-  <nav>
-    <ul class="pagination">
-      {% if pagination.has_prev %}
-        <li class="page-item">
-          <a class="page-link" href="{{ url_for('prompt.index', page=pagination.prev_num) }}">Précédent</a>
-        </li>
-      {% endif %}
 
-      {% for page_num in pagination.iter_pages() %}
-        {% if page_num %}
-          <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-            <a class="page-link" href="{{ url_for('prompt.index', page=page_num) }}">{{ page_num }}</a>
-          </li>
+  <!-- Messages flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
         {% endif %}
-      {% endfor %}
+    {% endwith %}
 
-      {% if pagination.has_next %}
-        <li class="page-item">
-          <a class="page-link" href="{{ url_for('prompt.index', page=pagination.next_num) }}">Suivant</a>
-        </li>
-      {% endif %}
-    </ul>
-  </nav>
+
+
+    <!-- Liste des prompts -->
+    {% if prompts %}
+        <div class="row">
+            {% for prompt in prompts %}
+                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-3">
+
+                    <div class="card h-100 prompt-card-compact" data-prompt-id="{{ prompt.id }}">
+                        {% if prompt.image_filename %}
+                            <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
+                                 class="card-img-top" style="height: 120px; object-fit: cover;">
+                        {% endif %}
+
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-2">{{ prompt.title }}</h6>
+
+                            <!-- Afficher la catégorie -->
+                            {% if prompt.category %}
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-folder"></i> {{ prompt.category.name }}
+                                    </small>
+                                </div>
+                            {% endif %}
+
+                            <p class="card-text small mb-2">
+                                {{ prompt.prompt[:60] }}{% if prompt.prompt|length > 60 %}...{% endif %}
+                            </p>
+
+                            {% if prompt.tags %}
+                                <div class="mb-2">
+                                    {% for tag in prompt.tags.split(',')[:2] %}
+                                        <span class="badge bg-secondary badge-sm me-1">{{ tag.strip() }}</span>
+                                    {% endfor %}
+                                    {% if prompt.tags.split(',')|length > 2 %}
+                                        <small class="text-muted">+{{ prompt.tags.split(',')|length - 2 }}</small>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                        </div>
+
+                        <div class="card-footer p-2 d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                {{ prompt.created_at.strftime('%d/%m') }}
+                            </small>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('prompt.view', prompt_id=prompt.id) }}"
+                                   class="btn btn-sm btn-outline-primary" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('prompt.edit', prompt_id=prompt.id) }}"
+                                   class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center mt-5">
+            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">Aucun prompt trouvé</h4>
+            <p class="text-muted">
+                {% if selected_category %}
+                    Cette catégorie ne contient pas encore de prompts.
+                {% else %}
+                    Commencez par créer votre premier prompt !
+                {% endif %}
+            </p>
+
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

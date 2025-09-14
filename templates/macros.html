@@ -1,0 +1,63 @@
+<!-- MACRO pour afficher l'arbre des catégories récursivement -->
+{% macro render_category_tree(category, selected_category) %}
+    <div class="category-item {% if selected_category and selected_category.id == category.id %}active{% endif %}"
+         onclick="location.href='{{ url_for('prompt.index', category_id=category.id) }}'">
+
+        {% if category.children.count() > 0 %}
+            <i class="fas fa-folder"></i>
+        {% else %}
+            <i class="fas fa-folder-open"></i>
+        {% endif %}
+
+        {{ category.name }}
+
+        {% if category.prompts.count() > 0 %}
+            <small class="text-muted">({{ category.prompts.count() }})</small>
+        {% endif %}
+    </div>
+
+    {% if category.children.count() > 0 %}
+        <div class="category-children">
+            {% for child in category.children %}
+                {{ render_category_tree(child, selected_category) }}
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro render_manage_tree(categories, level=0) %}
+    {% for category in categories %}
+        <div class="border-bottom py-2" style="margin-left: {{ level * 20 }}px;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ category.name }}</strong>
+                    {% if category.description %}
+                        <small class="text-muted">- {{ category.description }}</small>
+                    {% endif %}
+                    <br>
+                    <small class="text-muted">
+                        {{ category.prompts.count() }} prompt(s) •
+                        {{ category.children.count() }} sous-catégorie(s)
+                    </small>
+                </div>
+                <div>
+                    <a href="{{ url_for('prompt.edit_category', category_id=category.id) }}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form method="POST" action="{{ url_for('prompt.delete_category', category_id=category.id) }}"
+                          style="display: inline;"
+                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if category.children.count() > 0 %}
+            {{ render_manage_tree(category.children.all(), level + 1) }}
+        {% endif %}
+    {% endfor %}
+{% endmacro %}

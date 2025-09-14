@@ -3,3 +3,144 @@
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
+
+.category-tree {
+            max-height: 70vh;
+            overflow-y: auto;
+}
+
+.category-item {
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            margin: 0.1rem 0;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+}
+
+.category-item:hover {
+            background-color: #f8f9fa;
+}
+
+.category-item.active {
+            background-color: #0d6efd;
+            color: white;
+}
+
+.category-children {
+            margin-left: 1rem;
+            border-left: 1px solid #dee2e6;
+            padding-left: 0.5rem;
+}
+
+.sidebar {
+            min-height: calc(100vh - 56px);
+            background-color: #f8f9fa;
+}
+
+.breadcrumb-category {
+            background: none;
+            padding: 0;
+}
+.prompt-card-compact {
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.prompt-card-compact:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.badge-sm {
+    font-size: 0.7em;
+    padding: 0.2em 0.4em;
+}
+
+.card-title {
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+.card-text {
+    font-size: 0.875rem;
+    line-height: 1.3;
+}
+
+/* Responsive : ajuster selon la taille d'écran */
+@media (min-width: 1400px) {
+    /* Sur très grands écrans, 6 colonnes */
+    .col-xl-2 {
+        flex: 0 0 auto;
+        width: 16.66666667%;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Sur mobile, cartes encore plus compactes */
+    .prompt-card-compact .card-body {
+        padding: 0.75rem;
+    }
+
+    .prompt-card-compact .card-footer {
+        padding: 0.5rem;
+    }
+}
+/* ----------------------------- */
+
+.icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+.param-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.param-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.image-container:hover .image-overlay {
+    opacity: 1 !important;
+}
+
+.prompt-text {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+/* Scrollbar personnalisée pour les prompts */
+.prompt-text::-webkit-scrollbar {
+    width: 6px;
+}
+
+.prompt-text::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.prompt-text::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.prompt-text::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
