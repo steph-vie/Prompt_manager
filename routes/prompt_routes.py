@@ -4,12 +4,12 @@ import os
 import uuid
 from flask import (
     Blueprint, render_template, request, redirect,
-    url_for, flash, current_app,jsonify
+    url_for, flash, current_app, jsonify
 )
 from werkzeug.utils import secure_filename
 
 from models import db, Prompt, Category
-from utils import ComfyUIImage,allowed_file, clean_tags, CategoryService
+from utils import ComfyUIImage, allowed_file, clean_tags, CategoryService
 
 prompt_bp = Blueprint('prompt', __name__)
 
@@ -36,8 +36,11 @@ def index(category_id=None):
     if selected_category:
         # Récupérer les IDs de la catégorie et de ses enfants
         category_ids = [selected_category.id]
-        category_ids.extend([child.id for child in selected_category.get_all_children()])
-        prompts_query = prompts_query.filter(Prompt.category_id.in_(category_ids))
+        category_ids.extend([child.id for child in selected_category.
+                             get_all_children()])
+        prompts_query = (prompts_query.filter(
+            Prompt.category_id.
+            in_(category_ids)))
 
     if tag:
         prompts_query = prompts_query.filter(Prompt.tags.like(f'%{tag}%'))
@@ -116,8 +119,9 @@ def add():
             filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
             image.save(os.path.join(current_app.config['UPLOAD_FOLDER'],
                                     filename))
-        image_upload = ComfyUIImage(os.path.join(current_app.config['UPLOAD_FOLDER'],
-                                    filename))
+        image_upload = ComfyUIImage(os.path.
+                                    join(current_app.config['UPLOAD_FOLDER'],
+                                         filename))
         new_prompt = Prompt(title=title,
                             prompt=image_upload.get_positive_prompt(),
                             tags=tags_cleaned,
@@ -134,7 +138,7 @@ def add():
         flash("Prompt ajouté avec succès.", "success")
         return redirect(url_for('.index'))
 
-    return render_template('add.html',liste_categories=category_options)
+    return render_template('add.html', liste_categories=category_options)
 
 
 @prompt_bp.route('/edit/<int:prompt_id>', methods=['GET', 'POST'])
@@ -290,7 +294,8 @@ def delete_category(category_id):
 @prompt_bp.route('/categories')
 def manage_categories():
     category_tree = CategoryService.get_tree()
-    return render_template('manage_categories.html', category_tree=category_tree)
+    return render_template('manage_categories.html',
+                           category_tree=category_tree)
 
 
 # API pour l'arbre des catégories (pour JavaScript)
@@ -299,4 +304,3 @@ def api_categories_tree():
     root_categories = CategoryService.get_tree()
     tree = [CategoryService.build_tree_dict(cat) for cat in root_categories]
     return jsonify(tree)
-

@@ -5,6 +5,7 @@ from models import Category
 import json
 from PIL import Image
 
+
 class ComfyUIImage:
     def __init__(self, image_path):
         self.image_path = image_path
@@ -22,13 +23,14 @@ class ComfyUIImage:
         except json.JSONDecodeError:
             raise ValueError("❌ Impossible de décoder le JSON du champ 'prompt'.")
 
-    def get_value(self, key):
+    def get_value(self, value):
         """Cherche une clé dans tous les nœuds du prompt (inputs seulement)"""
-        for node in self.prompt.values():
-            value = node.get("inputs", {}).get(key)
-            if value is not None:
-                return value
-        return None
+        for key, node in self.prompt.items():
+            if value in list(node["inputs"].keys()):
+                # value = node.get("inputs", {}).get(key)
+                # if value is not None:
+                if type(node["inputs"][value]).__name__ != 'list':
+                    return node["inputs"][value]
 
     # Alias pratiques
     def get_positive_prompt(self):
@@ -38,7 +40,11 @@ class ComfyUIImage:
         return self.get_value("negative")
 
     def get_seed(self):
-        return self.get_value("noise_seed")
+        seed_temp = self.get_value("seed")
+        if seed_temp != "None":
+            return seed_temp
+        else:
+            return self.get_value("noise_seed")
 
     def get_steps(self):
         return self.get_value("steps")
@@ -57,6 +63,7 @@ class ComfyUIImage:
 
         clean_loras = ",".join(lora.strip() for lora in loras)
         return clean_loras if loras else None
+
 
 class CategoryService:
 
@@ -84,7 +91,8 @@ class CategoryService:
 
         def add_category_options(categories, level=0):
             for category in categories:
-                indent = "　" * level  # Caractère d'espacement japonais pour l'indentation
+                # Caractère d'espacement japonais pour l'indentation
+                indent = "　" * level
                 options.append((category.id, f"{indent}{category.name}"))
                 add_category_options(category.children.all(), level + 1)
 
