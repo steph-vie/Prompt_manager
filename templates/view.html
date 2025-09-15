@@ -110,16 +110,6 @@
                             </button>
                         </div>
                         <div class="col-md-6">
-                            <a href="{{ url_for('prompt.edit', prompt_id=prompt.id) }}" class="btn btn-primary btn-lg w-100">
-                                <i class="fas fa-edit me-2"></i>Modifier ce prompt
-                            </a>
-                        </div>
-                        <div class="col-md-6">
-                            <button type="button" class="btn btn-outline-info btn-lg w-100" onclick="sharePrompt()">
-                                <i class="fas fa-share me-2"></i>Partager
-                            </button>
-                        </div>
-                        <div class="col-md-6">
                             <form method="POST" action="{{ url_for('prompt.delete', prompt_id=prompt.id) }}" class="w-100"
                                   onsubmit="return confirm('⚠️ Êtes-vous sûr de vouloir supprimer ce prompt définitivement ?');">
                                 <button type="submit" class="btn btn-danger btn-lg w-100">
@@ -139,9 +129,9 @@
             <!-- Image -->
             <div class="card border-0 shadow-lg mb-4">
                 {% if prompt.image_filename %}
-                    <div class="image-container position-relative overflow-hidden rounded-4">
+                    <div class="image-container position-relative overflow-hidden">
                         <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
-                             class="card-img-top" style="height: 550px; object-fit: cover; background: #f8f9fa;" alt="Prompt Image">
+                             class="card-img" style="height: 550px; object-fit: cover;" alt="Prompt Image">
                         <div class="image-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center opacity-0 transition-all"
                              style="background: rgba(0,0,0,0.7); transition: opacity 0.3s;">
                             <button class="btn btn-light btn-lg" onclick="openImageModal()">
@@ -219,7 +209,7 @@
                                         {% if lora.strip() != "None" and lora.strip() %}
                                             <span class="badge bg-purple bg-opacity-75 fs-6 px-2 py-1"
                                                   title="{{ lora.strip() }}" style="background-color: #6f42c1 !important; font-size: 0.8rem;">
-                                                {{ lora.strip()[:18] }}{% if lora.strip()|length > 18 %}...{% endif %}
+                                                {{ lora.strip() }}
                                             </span>
                                         {% endif %}
                                     {% endfor %}
