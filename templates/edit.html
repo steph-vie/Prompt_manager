@@ -1,38 +1,70 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Modifier le prompt</h2>
-<form method="POST" enctype="multipart/form-data">
-  <div class="mb-3">
-    <label class="form-label">Titre</label>
-    <input type="text" name="title" class="form-control" value="{{ prompt.title }}" required>
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 pb-0">
+          <h4 class="mb-0 text-dark fw-bold">Modifier le prompt</h4>
+        </div>
+        <div class="card-body p-4">
+          <form method="POST" enctype="multipart/form-data">
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-dark">Titre</label>
+              <input type="text" name="title" class="form-control form-control-lg border-2" 
+                     value="{{ prompt.title }}" required 
+                     placeholder="Entrez le titre du prompt">
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-dark">Catégorie</label>
+              <select class="form-select form-select-lg border-2" name="categorie" id="categorie">
+                {% for value, label in liste_categories %}
+                <option value="{{ value }}"
+                    {% if prompt.category_id == value %}selected{% endif %}>
+                  {{ label }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-dark">Tags</label>
+              <input type="text" name="tags" class="form-control form-control-lg border-2" 
+                     value="{{ prompt.tags }}" 
+                     placeholder="Séparez les tags par des virgules">
+              <div class="form-text">Utilisez des virgules pour séparer les différents tags</div>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label fw-semibold text-dark">Image d'illustration</label>
+              <input type="file" name="image" class="form-control form-control-lg border-2" 
+                     accept="image/*">
+              <div class="form-text">Laissez vide pour conserver l'image actuelle</div>
+              
+              {% if prompt.image_filename %}
+              <div class="mt-3">
+                <p class="text-muted mb-2">Image actuelle :</p>
+                <img src="{{ url_for('static', filename='uploads/' ~ prompt.image_filename) }}" 
+                     class="img-fluid rounded shadow-sm" 
+                     style="max-width: 200px; max-height: 150px; object-fit: cover;">
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="d-flex gap-3 pt-3">
+              <button type="submit" class="btn btn-primary btn-lg px-4">
+                <i class="fas fa-save me-2"></i>Enregistrer
+              </button>
+              <a href="{{ url_for('prompt.view', prompt_id=prompt.id) }}" 
+                 class="btn btn-outline-secondary btn-lg px-4">
+                <i class="fas fa-times me-2"></i>Annuler
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="mb-3">
-    <label class="form-label">Prompt</label>
-    <textarea name="prompt" class="form-control" rows="5" required>{{ prompt.prompt }}</textarea>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Categorie</label>
-    <select class="form-select" name="categorie" id="categorie">
-      {% for value, label in liste_categories %}
-      <option value="{{ value }}"
-          {% if prompt.category_id == value %}selected{% endif %}>
-        {{ label }}
-      </option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Tags (séparés par des virgules)</label>
-    <input type="text" name="tags" class="form-control" value="{{ prompt.tags }}">
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Image d'illustration (laisser vide pour conserver l'image actuelle)</label>
-    <input type="file" name="image" class="form-control">
-    {% if prompt.image_filename %}
-      <p class="mt-2">Image actuelle :<br><img src="{{ url_for('static', filename='uploads/' ~ prompt.image_filename) }}" class="img-fluid rounded mt-1" style="max-width: 200px;"></p>
-    {% endif %}
-  </div>
-  <button type="submit" class="btn btn-primary">Enregistrer</button>
-  <a href="{{ url_for('prompt.view', prompt_id=prompt.id) }}" class="btn btn-secondary">Annuler</a>
-</form>
+</div>
 {% endblock %}
