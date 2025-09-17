@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Statistiques{% endblock %}
+{% block content %}
+<H2>Statistiques</H2>
+
+<a>Nombre de document: {{ nbr_prompts }}</a>
+
+</BR>
+<table border="1">
+    <tr>
+      <th>Checkpoints</th>
+      <th>Utilisation</th>
+{% for checkpoint, count in list_checkpoints %}
+    <tr>
+        <td> {{ checkpoint }}</td>
+        <td> {{ count }} </td>
+    </tr>
+{% endfor %}
+</table>
+{% for toto in loras %}
+<p>{{ toto }}</p>
+{% endfor %}
+
+{% endblock %}

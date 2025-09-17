@@ -65,7 +65,7 @@
                     <div class="card h-100 prompt-card-compact" data-prompt-id="{{ prompt.id }}">
                         {% if prompt.image_filename %}
                             <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
-                                 class="card-img-top" style="height: 120px; object-fit: cover;">
+                                 class="card-img-top" style="height: 250px; object-fit: cover;">
                         {% endif %}
 
                         <div class="card-body p-3">
@@ -79,10 +79,6 @@
                                     </small>
                                 </div>
                             {% endif %}
-
-                            <p class="card-text small mb-2">
-                                {{ prompt.prompt[:60] }}{% if prompt.prompt|length > 60 %}...{% endif %}
-                            </p>
 
                             {% if prompt.tags %}
                                 <div class="mb-2">

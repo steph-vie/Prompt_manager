@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     """
     Modèle représentant un prompt dans la base de données.
@@ -31,7 +32,6 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
         db.ForeignKey("categories.id", name="fk_prompt_category"),
         nullable=True
     )
-
 
     # Image et timestamps
     image_filename = db.Column(db.String(120), nullable=True)

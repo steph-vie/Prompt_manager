@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Prompt Manager{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/stylesheet.css')}}">
   </head>
   <body>
@@ -22,6 +22,9 @@
                 </a>
                 <a class="nav-link" href="{{ url_for('prompt.manage_categories') }}">
                     <i class="fas fa-folder"></i> Catégories
+                </a>
+                 <a class="nav-link" href="{{ url_for('prompt.statistiques') }}">
+                    <i class="fa fa-bar-chart"></i> Statistiques
                 </a>
             </div>
         </div>

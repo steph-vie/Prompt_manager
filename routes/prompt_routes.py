@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 
 from models import db, Prompt, Category
 from utils import ComfyUIImage, allowed_file, clean_tags, CategoryService
+from sqlalchemy import func
 
 prompt_bp = Blueprint('prompt', __name__)
 
@@ -154,7 +155,7 @@ def edit(prompt_id):
     category_options = CategoryService.get_category_options()
     if request.method == 'POST':
         prompt.title = request.form['title']
-        prompt.prompt = request.form['prompt']
+        # prompt.prompt = request.form['prompt']
         prompt.tags = clean_tags(request.form['tags'])
         prompt.category_id = request.form['categorie']
 
@@ -304,3 +305,32 @@ def api_categories_tree():
     root_categories = CategoryService.get_tree()
     tree = [CategoryService.build_tree_dict(cat) for cat in root_categories]
     return jsonify(tree)
+
+# -----------------------------------------------------------------------------------
+
+
+@prompt_bp.route('/statistiques')
+def statistiques():
+
+    nbr_prompts = Prompt.query.count()
+    results_checkpoints = (
+    db.session.query(
+        Prompt.checkpoint,
+        func.count(Prompt.checkpoint).label("count")
+    )
+    .group_by(Prompt.checkpoint)
+    .order_by(func.count(Prompt.checkpoint).desc())  # tri décroissant par occurrence
+    .all()
+)
+    # Convertir en vrais tuples
+    results_checkpoints = [(r.checkpoint, r.count) for r in results_checkpoints]
+
+    result_loras = db.session.query(Prompt.loras).all()
+
+    # result_loras = [loras for r in result_loras]
+    print(result_loras)
+
+    return render_template('statistiques.html',
+                           nbr_prompts=nbr_prompts,
+                           list_checkpoints=results_checkpoints,
+                           loras=result_loras)

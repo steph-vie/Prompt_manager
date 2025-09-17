@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block title %}{{ prompt.title.capitalize() }}{% endblock %}
 {% block content %}
 <div class="container-fluid px-4 py-3">
     <!-- En-tête avec titre et catégorie -->
@@ -9,7 +10,7 @@
                     <h1 class="display-5 fw-bold text-dark mb-2">{{ prompt.title }}</h1>
                     <div class="d-flex align-items-center text-muted">
                         <i class="fas fa-folder me-2"></i>
-                        <span class="fs-5">{{ prompt.category.get_path() }}</span>
+                        <span class="fs-5">{% if prompt.category %} {{ prompt.category.get_path() }} {% else %}Pas de categorie{% endif %}</span>
                         <span class="mx-3">•</span>
                         <i class="fas fa-clock me-2"></i>
                         <span class="fs-6">{{ prompt.created_at.strftime('%d/%m/%Y à %H:%M') }}</span>
