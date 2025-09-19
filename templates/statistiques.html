@@ -1,24 +1,183 @@
 {% extends 'base.html' %}
 {% block title %}Statistiques{% endblock %}
+
 {% block content %}
-<H2>Statistiques</H2>
+<div class="container-fluid px-4 py-3">
+    <!-- En-tête avec titre -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 fw-bold text-dark mb-2">Statistiques</h1>
+                    <div class="d-flex align-items-center text-muted">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        <span class="fs-5">Vue d'ensemble des données</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('prompt.index') }}"
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<a>Nombre de document: {{ nbr_prompts }}</a>
+    <!-- Contenu principal -->
+    <div class="row g-4">
+        <!-- Colonne principale -->
+        <div class="col-lg-8">
+            <!-- Résumé général -->
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary bg-opacity-10 me-3">
+                            <i class="fas fa-database text-primary fs-4"></i>
+                        </div>
+                        <h4 class="mb-0 text-primary fw-bold">Résumé Général</h4>
+                    </div>
 
-</BR>
-<table border="1">
-    <tr>
-      <th>Checkpoints</th>
-      <th>Utilisation</th>
-{% for checkpoint, count in list_checkpoints %}
-    <tr>
-        <td> {{ checkpoint }}</td>
-        <td> {{ count }} </td>
-    </tr>
-{% endfor %}
-</table>
-{% for toto in loras %}
-<p>{{ toto }}</p>
-{% endfor %}
+                    <div class="param-card bg-gradient rounded-4 p-3" style="background: linear-gradient(135deg, #e7f1ff 0%, #f0f7ff 100%);">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-file-alt text-primary fs-5 me-2"></i>
+                                <span class="fw-semibold text-dark">Nombre de documents</span>
+                            </div>
+                            <span class="badge bg-primary fs-4 px-4 py-3 font-monospace">{{ nbr_prompts }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau des checkpoints -->
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-success bg-opacity-10 me-3">
+                            <i class="fas fa-bookmark text-success fs-4"></i>
+                        </div>
+                        <h4 class="mb-0 text-success fw-bold">Utilisation des Checkpoints: {{ list_checkpoints| length }}</h4>
+                    </div>
+
+                    {% if list_checkpoints %}
+                    <div class="table-responsive">
+                        <table class="table table-hover border-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0 fw-semibold text-dark py-3">
+                                        <i class="fas fa-bookmark me-2"></i>Checkpoint
+                                    </th>
+                                    <th class="border-0 fw-semibold text-dark py-3">
+                                        <i class="fas fa-chart-bar me-2"></i>Utilisation
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for checkpoint, count in list_checkpoints %}
+                                <tr>
+                                    <td class="border-0 py-3">
+                                        <span class="fw-medium text-dark" title="{{ checkpoint }}">
+                                            {{ checkpoint[:50] }}{% if checkpoint|length > 50 %}...{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="border-0 py-3">
+                                        <span class="badge bg-success bg-opacity-75 fs-6 px-3 py-2 font-monospace">{{ count }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-circle text-muted fs-2 mb-3"></i>
+                        <p class="text-muted mb-0">Aucun checkpoint disponible</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tableau des tags -->
+            {% if list_tags %}
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-secondary bg-opacity-10 me-3">
+                            <i class="fas fa-tags text-secondary fs-4"></i>
+                        </div>
+                        <h4 class="mb-0 text-secondary fw-bold">Utilisation des Tags : {{ list_tags | length }}</h4>
+                    </div>
+
+                    <div class="table-responsive">
+                                {% for tag, count in list_tags %}
+                                        <button type="button" class="btn btn-secondary m-1">
+                                            <i class="fas fa-tag me-1"></i>{{ tag.strip() }} <span class="badge text-bg-secondary">{{ count }}</span>
+                                        </button>
+
+                                {% endfor %}
+
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar droite - LoRAs -->
+        <div class="col-lg-4">
+            {% if loras %}
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-info bg-opacity-10 me-3">
+                            <i class="fas fa-layer-group text-info fs-4"></i>
+                        </div>
+                        <h4 class="mb-0 text-info fw-bold">LoRAs Disponibles: {{ loras | length }}</h4>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover border-0">
+                            <tbody>
+                                {% for lora, count in loras %}
+                                <tr>
+                                    <td class="border-0 py-3">
+                                        <span class="fw-medium text-dark" title="{{ lora }}">
+                                            {{ lora[:30] }}{% if lora|length > 30 %}...{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="border-0 py-3">
+                                        <span class="badge bg-info bg-opacity-75 fs-6 px-3 py-2 font-monospace">{{ count }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-4 text-center">
+                    <div class="icon-circle bg-secondary bg-opacity-10 mx-auto mb-3" style="width: 60px; height: 60px;">
+                        <i class="fas fa-layer-group text-secondary fs-3"></i>
+                    </div>
+                    <h5 class="text-secondary mb-2">Aucune LoRA</h5>
+                    <p class="text-muted mb-0">Aucune LoRA disponible pour le moment</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Bootstrap tooltip initialization pour les éléments tronqués
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 
 {% endblock %}

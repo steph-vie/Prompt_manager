@@ -41,7 +41,7 @@ class ComfyUIImage:
 
     def get_seed(self):
         seed_temp = self.get_value("seed")
-        if seed_temp != "None":
+        if seed_temp is not None:
             return seed_temp
         else:
             return self.get_value("noise_seed")

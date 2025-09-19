@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 from models import db, Prompt, Category
 from utils import ComfyUIImage, allowed_file, clean_tags, CategoryService
 from sqlalchemy import func
+from collections import Counter
 
 prompt_bp = Blueprint('prompt', __name__)
 
@@ -312,6 +313,7 @@ def api_categories_tree():
 @prompt_bp.route('/statistiques')
 def statistiques():
 
+    # Recuperation des checkpoints
     nbr_prompts = Prompt.query.count()
     results_checkpoints = (
     db.session.query(
@@ -325,12 +327,40 @@ def statistiques():
     # Convertir en vrais tuples
     results_checkpoints = [(r.checkpoint, r.count) for r in results_checkpoints]
 
+    # Recuperation des Loras
     result_loras = db.session.query(Prompt.loras).all()
+    loras_sorted = dict(sorted(
+        Counter(
+            lora.strip()
+            for loras_per_prompt in result_loras
+            for loras in loras_per_prompt
+            for lora in str(loras).split(",")
+            if lora.strip() and lora.strip() != "None"
+        ).items(),
+        key=lambda x: x[1],
+        reverse=True
+    ))
+    results_loras = [(k, v) for k, v in loras_sorted.items()]
 
-    # result_loras = [loras for r in result_loras]
-    print(result_loras)
+    # Recuperation du nbr de tags
+    all_tags = db.session.query(Prompt.tags).all()
+
+
+    dict_tags = dict(sorted(
+        Counter(
+            t.strip()
+            for tag in all_tags
+            for p in tag
+            for t in p.split(",")
+        ).items(),
+        key=lambda x: x[1],
+        reverse=True))
+
+    results_tags = [(k,v) for k,v in dict_tags.items()]
+
 
     return render_template('statistiques.html',
                            nbr_prompts=nbr_prompts,
                            list_checkpoints=results_checkpoints,
-                           loras=result_loras)
+                           loras=results_loras,
+                           list_tags=results_tags)
