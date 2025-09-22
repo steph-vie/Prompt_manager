@@ -183,3 +183,76 @@
 .card:hover {
     transform: translateY(-2px);
 }
+
+/* Historique */
+/* Timeline styles */
+.timeline-item {
+    position: relative;
+    padding-left: 60px;
+    padding-bottom: 30px;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 60px;
+    height: calc(100% - 30px);
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-info {
+    position: absolute;
+    left: 0;
+    top: 20px;
+    width: 56px;
+    text-align: center;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 20px;
+    top: 25px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #007bff;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #dee2e6;
+}
+
+.timeline-content {
+    margin-bottom: 0;
+}
+
+.badge-lg {
+    font-size: 0.8em;
+    padding: 0.4rem 0.6rem;
+}
+
+/* Card hover effects */
+.timeline-content .card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.timeline-content .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Version-specific timeline markers */
+.timeline-item:nth-child(1) .timeline-marker {
+    background: #007bff;
+    box-shadow: 0 0 0 3px #007bff33;
+}
+
+.timeline-item:nth-child(2) .timeline-marker {
+    background: #17a2b8;
+    box-shadow: 0 0 0 3px #17a2b833;
+}
+
+.timeline-item:nth-child(3) .timeline-marker {
+    background: #6c757d;
+    box-shadow: 0 0 0 3px #6c757d33;
+}

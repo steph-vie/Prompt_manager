@@ -345,7 +345,6 @@ def statistiques():
     # Recuperation du nbr de tags
     all_tags = db.session.query(Prompt.tags).all()
 
-
     dict_tags = dict(sorted(
         Counter(
             t.strip()
@@ -356,11 +355,16 @@ def statistiques():
         key=lambda x: x[1],
         reverse=True))
 
-    results_tags = [(k,v) for k,v in dict_tags.items()]
-
+    results_tags = [(k, v) for k, v in dict_tags.items()]
 
     return render_template('statistiques.html',
                            nbr_prompts=nbr_prompts,
                            list_checkpoints=results_checkpoints,
                            loras=results_loras,
                            list_tags=results_tags)
+
+
+@prompt_bp.route('/historique')
+def historique():
+
+    return render_template('historique.html')
