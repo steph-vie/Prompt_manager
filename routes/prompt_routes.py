@@ -362,9 +362,3 @@ def statistiques():
                            list_checkpoints=results_checkpoints,
                            loras=results_loras,
                            list_tags=results_tags)
-
-
-@prompt_bp.route('/historique')
-def historique():
-
-    return render_template('historique.html')

@@ -111,7 +111,32 @@
                     </div>
                   </div>
             {% endfor %}
-        </div>
+
+
+            <div class="d-flex justify-content-center mt-4 mb-5">
+                <nav>
+                    <ul class="pagination">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('prompt.index', page=pagination.prev_num) }}">Précédent</a>
+                    </li>
+                    {% endif %}
+
+                    {% for page_num in pagination.iter_pages() %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('prompt.index', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if pagination.has_next %}
+                        <li class="page-item">
+                          <a class="page-link" href="{{ url_for('prompt.index', page=pagination.next_num) }}">Suivant</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                </nav>
+                </div>
     {% else %}
         <div class="text-center mt-5">
             <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
