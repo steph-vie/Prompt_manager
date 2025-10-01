@@ -1,45 +1,43 @@
-# 📸 Prompt Library – Gestionnaire de Prompts pour la Génération d'Images
+# Prompt Manager 💫
 
-Une mini application Flask pour organiser vos prompts de génération d'images (ex. : ComfyUI, Stable Diffusion). Chaque prompt peut être tagué, accompagné d'une image d'exemple et recherché par mots-clés.
+Une mini-application Flask pour gérer et explorer des **prompts** (texte + image + tags).  
+Pensée pour les amateurs de génération d’images (Stable Diffusion, ComfyUI, etc.).
 
 ## ✨ Fonctionnalités
+- CRUD complet des prompts (ajout, édition, suppression)  
+- Téléversement d’images associées  
+- Extraction de métadonnées (seed, steps, Lora, prompt négatif…)  
+- Tags, recherche et filtrage par mots-clés et catégories
+- Interface responsive avec Bootstrap 5  
 
-- Ajout, édition, suppression de prompts
-- Téléversement d'une image associée à chaque prompt
-- Récuperations de certaines infos "seed, staps, checkpoint, Loras, prompt negatif" depuis les méta-datas
-- Système de tags (filtrage inclus)
-- Recherche par mots-clés (titre ou contenu du prompt)
-- Interface responsive avec Bootstrap 5
+## 🛠️ Stack
+- Python 3 + Flask  
+- SQLite + SQLAlchemy  
+- Bootstrap 5  
 
-## 🧱 Technologies
+## 🚀 Installation rapide
+### 🖥️ 1er installation
+```bash
+git clone https://github.com/steph-vie/Prompt_manager.git
+cd Prompt_manager
+python3 -m venv venv
+source venv/bin/activate   # ou venv\Scripts\activate sous Windows
+pip install -r requirements.txt
+flask run
+```
 
-- Python 3
-- Flask
-- SQLite (base de données locale)
-- SQLAlchemy
-- Bootstrap (CDN)
 
-## 🚀 Installation locale
+### ⚠️ En cas de MAJ
+il faut upgrader la base
+```bash
+flask db upgrade
+```
+🌐 → http://127.0.0.1:5000
 
-1. **Clone du dépôt** :
-   ```bash
-   git clone https://github.com/votre-utilisateur/prompt-library.git
-   cd prompt-library
-   
-2. **Création d’un environnement virtuel** :
-    ```bash
-   python3 -m venv venv
-   source venv/bin/activate
+## 🐳 Docker
 
-3. **Installation des dépendances** :
-   ```bash
-   pip install flask flask_sqlalchemy
+Le dépôt inclut Dockerfile et docker-compose.yml pour un déploiement simplifié.
 
-4. **Lancement de l’application** :
-   ```bash
-   flask run
-   
-L'application sera accessible à l'adresse : http://127.0.0.1:5000
+## 📜 Licence
 
-## 📝 Licence
-Ce projet est open source et distribué sous licence MIT.
+MIT — libre d’usage, de partage et de modification.
