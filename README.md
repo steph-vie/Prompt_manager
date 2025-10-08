@@ -17,6 +17,7 @@ Pensée pour les amateurs de génération d’images (Stable Diffusion, ComfyUI,
 
 ## 🚀 Installation rapide
 ### 🖥️ 1er installation
+#### En local
 ```bash
 git clone https://github.com/steph-vie/Prompt_manager.git
 cd Prompt_manager
@@ -25,7 +26,10 @@ source venv/bin/activate   # ou venv\Scripts\activate sous Windows
 pip install -r requirements.txt
 flask run
 ```
-
+#### En docker
+```bash
+docker compose run -d
+```
 
 ### ⚠️ En cas de MAJ
 il faut upgrader la base
