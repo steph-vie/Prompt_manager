@@ -34,7 +34,7 @@
             {% if selected_category %}
                 <input type="hidden" name="category_id" value="{{ selected_category.id }}">
             {% endif %}
-            <input type="search" name="q" value="{{ search }}"
+            <input type="search" name="q" value="{{ query }}"
                    placeholder="Rechercher..." class="form-control me-2">
             <button type="submit" class="btn btn-outline-secondary">
                 <i class="fas fa-search"></i>
