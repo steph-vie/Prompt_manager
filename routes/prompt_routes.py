@@ -48,7 +48,7 @@ def index(category_id=None):
         prompts_query = prompts_query.filter(Prompt.tags.like(f'%{tag}%'))
     if query:
         prompts_query = prompts_query.filter(
-            (Prompt.title.contains(query)) | (Prompt.prompt.contains(query))
+            (Prompt.title.contains(query)) | (Prompt.prompt.contains(query)) | (Prompt.checkpoint.contains(query)) | (Prompt.loras.contains(query))
         )
 
     pagination = prompts_query.order_by(Prompt.id.desc()).paginate(page=page,

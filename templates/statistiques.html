@@ -77,9 +77,9 @@
                                 {% for checkpoint, count in list_checkpoints %}
                                 <tr>
                                     <td class="border-0 py-3">
-                                        <span class="fw-medium text-dark" title="{{ checkpoint }}">
+                                        <a class="fw-medium link-like-text" href="{{ url_for('prompt.index',q=checkpoint) }}">
                                             {{ checkpoint[:50] }}{% if checkpoint|length > 50 %}...{% endif %}
-                                        </span>
+                                        </a>
                                     </td>
                                     <td class="border-0 py-3">
                                         <span class="badge bg-success bg-opacity-75 fs-6 px-3 py-2 font-monospace">{{ count }}</span>
@@ -142,9 +142,9 @@
                                 {% for lora, count in loras %}
                                 <tr>
                                     <td class="border-0 py-3">
-                                        <span class="fw-medium text-dark" title="{{ lora }}">
+                                        <a class="fw-medium link-like-text" href="{{ url_for('prompt.index',q=lora) }}">
                                             {{ lora[:30] }}{% if lora|length > 30 %}...{% endif %}
-                                        </span>
+                                        </a>
                                     </td>
                                     <td class="border-0 py-3">
                                         <span class="badge bg-info bg-opacity-75 fs-6 px-3 py-2 font-monospace">{{ count }}</span>
