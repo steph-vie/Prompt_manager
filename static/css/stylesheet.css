@@ -256,3 +256,11 @@
     background: #6c757d;
     box-shadow: 0 0 0 3px #6c757d33;
 }
+
+.link-like-text {
+    color: inherit;
+    text-decoration: none;
+}
+.link-like-text:hover {
+    text-decoration: underline;
+}
