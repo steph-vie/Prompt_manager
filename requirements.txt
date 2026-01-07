@@ -1,6 +1,6 @@
-flask
-flask_sqlalchemy
-flask_wtf
-wtforms
-flask-migrate
-pillow
+Flask==3.1.1
+Flask-Migrate==4.1.0
+Flask-SQLAlchemy==3.1.1
+Flask-WTF==1.2.2
+pillow==11.3.0
+WTForms==3.2.1
