@@ -51,13 +51,13 @@
     <h4 class="fw-bold text-success mb-2">
         <i class="fas fa-plus-circle me-2"></i>Prompt positif
     </h4>
-    <pre class="bg-light rounded p-3">{{ prompt.prompt }}</pre>
+    <pre class="bg-light rounded p-3" style="white-space: pre-wrap">{{ prompt.prompt }}</pre>
 
     {% if prompt.neg_prompt %}
         <h4 class="fw-bold text-danger mt-4 mb-2">
             <i class="fas fa-minus-circle me-2"></i>Prompt négatif
         </h4>
-        <pre class="bg-light rounded p-3">{{ prompt.neg_prompt }}</pre>
+        <pre class="bg-light rounded p-3" style="white-space: pre-wrap">{{ prompt.neg_prompt }}</pre>
     {% endif %}
         </div>
         <div class="mb-4">
