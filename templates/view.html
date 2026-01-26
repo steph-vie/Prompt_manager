@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}{{ prompt.title.capitalize() }}{% endblock %}
 {% block content %}
-<div class="container-fluid px-4 py-3 border-bottom mb-4">
+<div class="container-fluid px-4 py-3 mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
         <div>
-            <h1 class="fw-bold mb-1">{{ prompt.title }}</h1>
+            <h1 class="fw-bold mb-1 font-monospace">{{ prompt.title }}</h1>
             <div class="text-muted small">
                 <i class="fas fa-folder me-1"></i>
                 {% if prompt.category %}{{ prompt.category.get_path() }}{% else %}Pas de catégorie{% endif %}
@@ -33,165 +33,89 @@
 </div>
 <div class="container-fluid px-4">
     <div class="row min-vh-100">
-        <div class="col-lg-4 d-flex align-items-center justify-content-center">
-            {% if prompt.image_filename %}
-                <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
-                    class="img-fluid"
-                    style="max-height: 90vh; object-fit: contain;"
-                    alt="Prompt image">
-            {% else %}
-                <div class="text-muted text-center">
-                    <i class="fas fa-image fs-1 mb-2"></i>
-                    <p>Aucune image</p>
-                </div>
+            <div class="col-lg-4 d-flex align-items-center justify-content-center">
+                    {% if prompt.image_filename %}
+                        <img
+                            src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
+                            alt="Prompt image"
+                            class="w-100 h-100"
+                            style="object-fit: cover;"
+                        >
+                    {% else %}
+                        <div class="text-muted text-center">
+                            <i class="fas fa-image fs-1 mb-2"></i>
+                            <p>Aucune image</p>
+                        </div>
+                    {% endif %}
+            </div>
+            <div class="col-lg-8 ps-lg-4">
+                <div class="mb-4">
+            <h4 class="fw-bold text-success mb-2 border-3">
+                <i class="fas fa-plus-circle me-2"></i>Prompt positif
+            </h4>
+            <pre class="bg-light border border-success p-3 border-2" style="white-space: pre-wrap">{{ prompt.prompt }}</pre>
+
+            {% if prompt.neg_prompt %}
+                <h4 class="fw-bold text-danger mt-4 mb-2 border-3">
+                    <i class="fas fa-minus-circle me-2"></i>Prompt négatif
+                </h4>
+                <pre class="bg-light border border-danger p-3 border-2" style="white-space: pre-wrap">{{ prompt.neg_prompt }}</pre>
             {% endif %}
-        </div>
-    <div class="col-lg-8 ps-lg-4">
-        <div class="mb-4">
-    <h4 class="fw-bold text-success mb-2">
-        <i class="fas fa-plus-circle me-2"></i>Prompt positif
-    </h4>
-    <pre class="bg-light rounded p-3" style="white-space: pre-wrap">{{ prompt.prompt }}</pre>
-
-    {% if prompt.neg_prompt %}
-        <h4 class="fw-bold text-danger mt-4 mb-2">
-            <i class="fas fa-minus-circle me-2"></i>Prompt négatif
-        </h4>
-        <pre class="bg-light rounded p-3" style="white-space: pre-wrap">{{ prompt.neg_prompt }}</pre>
-    {% endif %}
-        </div>
-        <div class="mb-4">
-    <h4 class="fw-bold mb-3">
-        <i class="fas fa-cog me-2"></i>Paramètres
-    </h4>
-
-    <div class="row g-3">
-        <div class="col-md-6">
-            <div class="border rounded p-3">
-                <strong>Seed</strong>
-                <div class="font-monospace">{{ prompt.seed }}</div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="border rounded p-3">
-                <strong>Steps</strong>
-                <div class="font-monospace">{{ prompt.steps }}</div>
-            </div>
-        </div>
-
-        <div class="col-12">
-            <div class="border rounded p-3">
-                <strong>Checkpoint</strong>
-                <div class="font-monospace small">{{ prompt.checkpoint }}</div>
-            </div>
-        </div>
-
-        {% if prompt.loras and prompt.loras != "None" %}
-        <div class="col-12">
-            <div class="border rounded p-3">
-                <strong>LoRAs</strong>
-                <div class="d-flex flex-wrap gap-2 mt-2">
-                    {% for lora in prompt.loras.split(',') %}
-                        <span class="badge bg-secondary">{{ lora.strip() }}</span>
-                    {% endfor %}
                 </div>
+                <div class="mb-4">
+            <h4 class="fw-bold mb-3">
+                <i class="fas fa-cog me-2"></i>Paramètres
+            </h4>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="border border-3 p-3">
+                        <strong>Seed</strong>
+                        <div class="font-monospace">{{ prompt.seed }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="border border-3 p-3">
+                        <strong>Steps</strong>
+                        <div class="font-monospace">{{ prompt.steps }}</div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="border border-3 p-3">
+                        <strong>Checkpoint</strong>
+                        <div class="font-monospace small">{{ prompt.checkpoint }}</div>
+                    </div>
+                </div>
+
+                {% if prompt.loras and prompt.loras != "None" %}
+                <div class="col-12">
+                    <div class="border border-3 p-3">
+                        <strong>LoRAs</strong>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            {% for lora in prompt.loras.split(',') %}
+                                <span class="badge bg-secondary">{{ lora.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% if prompt.tags %}
+        <div class="mb-5">
+            <h4 class="fw-bold mb-2">
+                <i class="fas fa-tags me-2"></i>Tags
+            </h4>
+            <div class="d-flex flex-wrap gap-2">
+                {% for tag in prompt.tags.split(',') %}
+                    <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                {% endfor %}
             </div>
         </div>
         {% endif %}
-    </div>
-</div>
-{% if prompt.tags %}
-<div class="mb-5">
-    <h4 class="fw-bold mb-2">
-        <i class="fas fa-tags me-2"></i>Tags
-    </h4>
-    <div class="d-flex flex-wrap gap-2">
-        {% for tag in prompt.tags.split(',') %}
-            <span class="badge bg-secondary">{{ tag.strip() }}</span>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
+        </div> <!-- col-lg-8 -->
+    </div> <!-- row -->
+</div> <!-- container-fluid -->
 
-
-
-
-<script>
-function copyText(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        showToast('Texte copié dans le presse-papiers !', 'success');
-    }).catch(function(err) {
-        console.error('Erreur lors de la copie: ', err);
-        showToast('Erreur lors de la copie', 'error');
-    });
-}
-
-function copyAllPrompt() {
-    let fullPrompt = `{{ prompt.prompt|replace('\n', '\\n')|replace('"', '\\"') }}`;
-    {% if prompt.neg_prompt %}
-    fullPrompt += '\n\nPrompt négatif:\n{{ prompt.neg_prompt|replace('\n', '\\n')|replace('"', '\\"') }}';
-    {% endif %}
-
-    copyText(fullPrompt);
-}
-
-function sharePrompt() {
-    if (navigator.share) {
-        navigator.share({
-            title: '{{ prompt.title }}',
-            text: `{{ prompt.prompt[:100] }}...`,
-            url: window.location.href
-        });
-    } else {
-        copyText(window.location.href);
-        showToast('Lien copié dans le presse-papiers !', 'info');
-    }
-}
-
-function openImageModal() {
-    {% if prompt.image_filename %}
-    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
-    modal.show();
-    {% endif %}
-}
-
-function showToast(message, type = 'success') {
-    const colors = {
-        success: 'alert-success',
-        error: 'alert-danger',
-        info: 'alert-info'
-    };
-
-    const icons = {
-        success: 'fa-check',
-        error: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
-
-    const toast = document.createElement('div');
-    toast.className = `position-fixed top-0 end-0 m-3 alert ${colors[type]} alert-dismissible fade show`;
-    toast.style.zIndex = '9999';
-    toast.innerHTML = `
-        <i class="fas ${icons[type]} me-2"></i>${message}
-        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
-    `;
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }
-    }, 4000);
-}
-
-// Bootstrap tooltip initialization
-document.addEventListener('DOMContentLoaded', function() {
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-});
-</script>
 {% endblock %}
