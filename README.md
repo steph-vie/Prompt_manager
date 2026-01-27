@@ -1,47 +1,137 @@
-# Prompt Manager 💫
+# 🎨 Prompt Manager
+
+[![Version](https://img.shields.io/badge/version-3.1.2-blue.svg)](https://github.com/steph-vie/Prompt_manager/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.x-yellow.svg)](https://www.python.org/)
 
 Une mini-application Flask pour gérer et explorer des **prompts** (texte + image + tags).  
-Pensée pour les amateurs de génération d’images (Stable Diffusion, ComfyUI, etc.).
+Pensée pour les amateurs de génération d’images (ComfyUI).
 
 ## ✨ Fonctionnalités
-- CRUD complet des prompts (ajout, édition, suppression)  
-- Téléversement d’images associées  
-- Extraction de métadonnées (seed, steps, Lora, prompt négatif…)  
-- Tags, recherche et filtrage par mots-clés et catégories
-- Interface responsive avec Bootstrap 5  
 
-## 🛠️ Stack
-- Python 3 + Flask  
-- SQLite + SQLAlchemy  
-- Bootstrap 5  
+### Gestion des prompts
+- 📝 **CRUD complet** : Création, lecture, modification et suppression de prompts
+- 🖼️ **Galerie visuelle** : Upload et association d'images pour chaque prompt
+- 🏷️ **Système de tags avancé** : Organisation par catégories personnalisées avec filtrage intelligent
+- 🔍 **Recherche puissante** : Recherche par mots-clés dans les titres et contenus
 
-## 🚀 Installation rapide
-### 🖥️ 1er installation
-#### En local
+### Métadonnées automatiques
+🔢 **Extraction intelligente** : Récupération automatique depuis les métadonnées d'images
+  - Seed
+  - Steps
+  - Checkpoint / Modèle
+  - LoRAs utilisés
+  - Prompt négatif
+
+### Interface moderne
+- 🎨 **Design responsive** : Interface élégante avec Bootstrap 5
+- 📱 **Mobile-friendly** : Utilisable sur tous les appareils
+- ⚡ **Performance optimisée** : Chargement rapide et navigation fluide
+
+## 🛠️ Technologies
+
+### Backend
+- **Python 3** - Langage principal
+- **Flask** - Framework web minimaliste et puissant
+- **SQLAlchemy** - ORM pour la gestion de base de données
+- **Flask-Migrate** - Gestion des migrations de schéma
+
+### Base de données
+- **SQLite** - Base de données locale légère et performante
+
+### Frontend
+- **Bootstrap 5** - Framework CSS moderne  
+
+## 📦 Installation
+
+### Méthode 1 : Installation locale manuelle
+
+#### Prérequis
+- Python 3.8 ou supérieur
+- pip (gestionnaire de paquets Python)
+- virtualenv (recommandé)
+
+#### Étapes
+
+1. **Cloner le dépôt**
 ```bash
 git clone https://github.com/steph-vie/Prompt_manager.git
 cd Prompt_manager
-python3 -m venv venv
-source venv/bin/activate   # ou venv\Scripts\activate sous Windows
-pip install -r requirements.txt
-flask run
-```
-#### En docker
-```bash
-docker compose run -d
 ```
 
-### ⚠️ En cas de MAJ
-il faut upgrader la base
+2. **Créer un environnement virtuel**
+```bash
+python3 -m venv venv
+
+# Sur Linux/macOS
+source venv/bin/activate
+
+# Sur Windows
+venv\Scripts\activate
+```
+
+3. **Installer les dépendances**
+```bash
+pip install -r requirements.txt
+```
+
+4. **Initialiser la base de données**
 ```bash
 flask db upgrade
 ```
-🌐 → http://127.0.0.1:5000
 
-## 🐳 Docker
+5. **Lancer l'application**
+```bash
+flask run
+```
 
-Le dépôt inclut Dockerfile et docker-compose.yml pour un déploiement simplifié.
+L'application sera accessible à l'adresse : **http://127.0.0.1:5000**
+
+### Méthode 2 : Installation avec Docker (Recommandé pour la production)
+
+#### Prérequis
+- Docker
+- Docker Compose
+
+#### Étapes
+
+1. **Cloner le dépôt**
+```bash
+git clone https://github.com/steph-vie/Prompt_manager.git
+cd Prompt_manager
+```
+2. **Modifier le .env**
+```bash
+HOST_PORT=5000
+DIR_BASE="a remplir"
+```
+
+3. **Lancer avec Docker Compose**
+```bash
+docker-compose up -d
+
+# En cas de maj de l'image
+docker-compose up -d --build
+```
+
+L'application sera accessible à l'adresse : **http://localhost:5000**
 
 ## 📜 Licence
 
 MIT — libre d’usage, de partage et de modification.
+
+## 📧 Contact
+
+**Steph Vie** - [@steph-vie](https://github.com/steph-vie)
+
+Lien du projet : [https://github.com/steph-vie/Prompt_manager](https://github.com/steph-vie/Prompt_manager)
+
+---
+
+<div align="center">
+
+**Développé avec ❤️ pour la communauté de l'IA générative**
+
+⭐ **N'oubliez pas de laisser une étoile si ce projet vous aide !** ⭐
+
+</div>
