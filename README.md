@@ -16,7 +16,7 @@ Pensée pour les amateurs de génération d’images (Stable Diffusion, ComfyUI,
 - Bootstrap 5  
 
 ## 🚀 Installation rapide
-### 🖥️ 1er installation
+### 🖥️ Première installation
 #### En local
 ```bash
 git clone https://github.com/steph-vie/Prompt_manager.git
@@ -24,11 +24,16 @@ cd Prompt_manager
 python3 -m venv venv
 source venv/bin/activate   # ou venv\Scripts\activate sous Windows
 pip install -r requirements.txt
+export SECRET_KEY="change-me"  # requis pour sessions/CSRF (mets une vraie clé en prod)
 flask run
 ```
 #### En docker
 ```bash
-docker compose run -d
+# 1) Crée ton fichier .env (voir .env.example)
+# cp .env.example .env
+
+# 2) Lance le service
+docker compose up -d
 ```
 
 ### ⚠️ En cas de MAJ
@@ -41,6 +46,19 @@ flask db upgrade
 ## 🐳 Docker
 
 Le dépôt inclut Dockerfile et docker-compose.yml pour un déploiement simplifié.
+
+### 🔧 Configuration `.env`
+
+Le `docker-compose.yml` utilise des variables d’environnement. Un exemple est fourni dans `.env.example`.
+
+- **`SECRET_KEY`**: clé Flask (sessions + CSRF). Génère-en une forte:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+- **`HOST_PORT`**: port exposé sur ta machine (ex: `5000`)
+- **`DIR_BASE`**: dossier hôte qui contient le dossier `prompt_manager/` utilisé pour les volumes
 
 ## 📜 Licence
 

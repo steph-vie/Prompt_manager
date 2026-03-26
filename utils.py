@@ -1,7 +1,7 @@
 """Liste des fonctions utilitaires de l'application"""
 
 from config import ALLOWED_EXTENSIONS
-from models import Category
+from models import db, Category
 import json
 from PIL import Image
 

@@ -45,7 +45,7 @@
                 <!-- Arbre des catégories -->
                 <div class="category-tree mt-3">
                     {% for category in category_tree %}
-                        {{ render_category_tree(category, selected_category) }}
+                        {{ render_category_tree(category, selected_category, category_prompt_counts, category_children_counts) }}
                     {% endfor %}
                 </div>
 
