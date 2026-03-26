@@ -15,7 +15,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('prompt.index') }}">
-                <i class="fas fa-paint-brush"></i> Prompt Manager V3.1.1
+                <i class="fas fa-paint-brush"></i> Prompt Manager V3.1.2
             </a>
             <button class="btn btn-outline-light ms-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
                 <i class="fas fa-bars"></i> Filtres
@@ -45,7 +45,6 @@
         <div class="offcanvas-body">
             <div class="row">
                 <div class="col-md-6">
-
                     <h6 class="text-muted text-uppercase mb-3">Catégories</h6>
 
                     <div class="category-item {% if not selected_category %}active{% endif %}"
@@ -53,11 +52,12 @@
                         <i class="fas fa-home"></i> Toutes les catégories
                     </div>
 
-                <!-- Arbre des catégories -->
-                <div class="category-tree mt-3">
-                    {% for category in category_tree %}
-                        {{ render_category_tree(category, selected_category, category_prompt_counts, category_children_counts) }}
-                    {% endfor %}
+                    <!-- Arbre des catégories -->
+                    <div class="category-tree mt-3">
+                        {% for category in category_tree %}
+                            {{ render_category_tree(category, selected_category, category_prompt_counts, category_children_counts) }}
+                        {% endfor %}
+                    </div>
                 </div>
 
                 <div class="col-md-6">
@@ -87,17 +87,35 @@
         </div>
     </div>
 
-   <div class="container-fluid mt-3">
+    <div class="container-fluid mt-3">
         {% block content %}{% endblock %}
     </div>
-        
-</div>
-
 
     <!-- <footer class="bg-body-secondary text-center fixed-bottom gap-2">
       <p>Copyright © 2025 Tous droits réservés. V 2.1</p>
     </footer> -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var offcanvasEl = document.getElementById('offcanvasSidebar');
+        if (!offcanvasEl) return;
 
+        function closeFiltersOffcanvas() {
+          var instance = bootstrap.Offcanvas.getInstance(offcanvasEl);
+          if (instance) instance.hide();
+        }
+
+        offcanvasEl.addEventListener('click', function (event) {
+          var target = event.target;
+          if (!target) return;
+
+          if (target.closest('.category-item') ||
+              target.closest('button[name="tag"]') ||
+              target.closest('a.btn-outline-danger')) {
+            closeFiltersOffcanvas();
+          }
+        });
+      });
+    </script>
 
     {% block scripts %}{% endblock %}
   </body>

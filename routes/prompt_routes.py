@@ -136,21 +136,25 @@ def add():
     if request.method == 'POST':
         title = request.form['title']
         tags = request.form['tags']
-        categorie_id = request.form['categorie']
+        categorie_id = request.form.get('categorie') or None
 
         if not title.strip():
             flash("Le titre est obligatoire.", "error")
             return redirect(url_for('.add'))
 
         tags_cleaned = clean_tags(tags)
-        image = request.files['image']
+        image = request.files.get('image')
         filename = None
 
-        if image and allowed_file(image.filename):
-            ext = os.path.splitext(image.filename)[1]
-            filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
-            image.save(os.path.join(current_app.config['UPLOAD_FOLDER'],
-                                    filename))
+        # L'extraction de métadonnées repose sur l'image source.
+        if not image or not image.filename or not allowed_file(image.filename):
+            flash("Une image valide est obligatoire pour créer un prompt.", "error")
+            return redirect(url_for('.add'))
+
+        ext = os.path.splitext(image.filename)[1]
+        filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
+        image.save(os.path.join(current_app.config['UPLOAD_FOLDER'],
+                                filename))
         image_upload = ComfyUIImage(os.path.
                                     join(current_app.config['UPLOAD_FOLDER'],
                                          filename))

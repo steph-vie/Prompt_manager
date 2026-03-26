@@ -129,10 +129,10 @@ DIR_BASE="a remplir"
 
 3. **Lancer avec Docker Compose**
 ```bash
-docker-compose up -d
+docker compose up -d
 
 # En cas de maj de l'image
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 L'application sera accessible à l'adresse : **http://localhost:5000**

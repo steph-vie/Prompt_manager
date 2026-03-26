@@ -69,9 +69,19 @@
         <div class="prompt-image-wrapper">
             <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
                  alt="{{ prompt.title }}">
-                <div class="prompt-date">
-                    {{ prompt.created_at.strftime('%d/%m/%Y') }}
-                </div>
+            <div class="prompt-date">
+                {{ prompt.created_at.strftime('%d/%m/%Y') }}
+            </div>
+        </div>
+    {% else %}
+        <div class="prompt-image-wrapper d-flex align-items-center justify-content-center text-white-50">
+            <div class="text-center px-2">
+                <i class="fas fa-image fa-2x mb-2"></i>
+                <div class="small">Aucune image</div>
+            </div>
+            <div class="prompt-date">
+                {{ prompt.created_at.strftime('%d/%m/%Y') }}
+            </div>
         </div>
     {% endif %}
 
