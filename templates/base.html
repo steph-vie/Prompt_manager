@@ -53,16 +53,11 @@
                         <i class="fas fa-home"></i> Toutes les catégories
                     </div>
 
-                    <a href="{{ url_for('prompt.new_category') }}"
-                    class="btn btn-outline-primary btn-sm my-2">
-                        <i class="fas fa-plus"></i> Nouvelle catégorie
-                    </a>
-
-                    <div class="category-tree mt-3">
-                        {% for category in category_tree %}
-                            {{ render_category_tree(category, selected_category) }}
-                        {% endfor %}
-                    </div>
+                <!-- Arbre des catégories -->
+                <div class="category-tree mt-3">
+                    {% for category in category_tree %}
+                        {{ render_category_tree(category, selected_category, category_prompt_counts, category_children_counts) }}
+                    {% endfor %}
                 </div>
 
                 <div class="col-md-6">

@@ -30,10 +30,9 @@
         </h2>
 
         <!-- Barre de recherche -->
-        <form method="GET" class="d-flex">
-            {% if selected_category %}
-                <input type="hidden" name="category_id" value="{{ selected_category.id }}">
-            {% endif %}
+        <form method="GET"
+              action="{% if selected_category %}{{ url_for('prompt.index', category_id=selected_category.id) }}{% else %}{{ url_for('prompt.index') }}{% endif %}"
+              class="d-flex">
             <input type="search" name="q" value="{{ query }}"
                    placeholder="Rechercher..." class="form-control me-2">
             <button type="submit" class="btn btn-outline-secondary">

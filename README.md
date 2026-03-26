@@ -42,6 +42,27 @@ Pensée pour les amateurs de génération d’images (ComfyUI).
 ### Frontend
 - **Bootstrap 5** - Framework CSS moderne  
 
+## 🚀 Installation rapide
+### 🖥️ Première installation
+#### En local
+```bash
+git clone https://github.com/steph-vie/Prompt_manager.git
+cd Prompt_manager
+python3 -m venv venv
+source venv/bin/activate   # ou venv\Scripts\activate sous Windows
+pip install -r requirements.txt
+export SECRET_KEY="change-me"  # requis pour sessions/CSRF (mets une vraie clé en prod)
+flask run
+```
+#### En docker
+```bash
+# 1) Crée ton fichier .env (voir .env.example)
+# cp .env.example .env
+
+# 2) Lance le service
+docker compose up -d
+```
+
 ## 📦 Installation
 
 ### Méthode 1 : Installation locale manuelle
@@ -115,6 +136,19 @@ docker-compose up -d --build
 ```
 
 L'application sera accessible à l'adresse : **http://localhost:5000**
+
+### 🔧 Configuration `.env`
+
+Le `docker-compose.yml` utilise des variables d’environnement. Un exemple est fourni dans `.env.example`.
+
+- **`SECRET_KEY`**: clé Flask (sessions + CSRF). Génère-en une forte:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+- **`HOST_PORT`**: port exposé sur ta machine (ex: `5000`)
+- **`DIR_BASE`**: dossier hôte qui contient le dossier `prompt_manager/` utilisé pour les volumes
 
 ## 📜 Licence
 
