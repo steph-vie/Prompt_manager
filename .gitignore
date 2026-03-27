@@ -2,3 +2,6 @@ static/uploads/*
 instance/
 __pycache__
 database/*
+.env
+.DS_Store
+**/.DS_Store

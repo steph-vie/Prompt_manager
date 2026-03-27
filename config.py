@@ -15,7 +15,7 @@ class Config:  # pylint: disable=too-few-public-methods
     """
     Definition des valeurs
     """
-    SECRET_KEY = 'toto'
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-insecure-change-me")
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DB_FOLDER,
                                                           'prompts.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False

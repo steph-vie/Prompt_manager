@@ -41,51 +41,9 @@
             background: none;
             padding: 0;
 }
-.prompt-card-compact {
-    transition: transform 0.2s ease-in-out;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
 
-.prompt-card-compact:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
 
-.badge-sm {
-    font-size: 0.7em;
-    padding: 0.2em 0.4em;
-}
 
-.card-title {
-    font-size: 1rem;
-    line-height: 1.2;
-}
-
-.card-text {
-    font-size: 0.875rem;
-    line-height: 1.3;
-}
-
-/* Responsive : ajuster selon la taille d'écran */
-@media (min-width: 1400px) {
-    /* Sur très grands écrans, 6 colonnes */
-    .col-xl-2 {
-        flex: 0 0 auto;
-        width: 16.66666667%;
-    }
-}
-
-@media (max-width: 576px) {
-    /* Sur mobile, cartes encore plus compactes */
-    .prompt-card-compact .card-body {
-        padding: 0.75rem;
-    }
-
-    .prompt-card-compact .card-footer {
-        padding: 0.5rem;
-    }
-}
-/* ----------------------------- */
 
 .icon-circle {
     width: 50px;
@@ -102,15 +60,6 @@
 
 .bg-purple {
     background-color: #6f42c1 !important;
-}
-
-.param-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.param-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
 .image-container:hover .image-overlay {
@@ -145,122 +94,92 @@
     background: #a8a8a8;
 }
 /* ----------- Statistiques ----------------*/
-.icon-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
-.param-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.param-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(0,0,0,0.025);
-}
-
-.text-purple {
-    color: #6f42c1 !important;
-}
-
-.bg-purple {
-    background-color: #6f42c1 !important;
-}
-
-/* Animation pour les cartes */
-.card {
-    transition: transform 0.2s ease;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-}
-
-/* Historique */
-/* Timeline styles */
-.timeline-item {
-    position: relative;
-    padding-left: 60px;
-    padding-bottom: 30px;
-}
-
-.timeline-item:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    left: 28px;
-    top: 60px;
-    height: calc(100% - 30px);
-    width: 2px;
-    background: #dee2e6;
-}
-
-.timeline-info {
-    position: absolute;
-    left: 0;
-    top: 20px;
-    width: 56px;
-    text-align: center;
-}
-
-.timeline-marker {
-    position: absolute;
-    left: 20px;
-    top: 25px;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #007bff;
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 3px #dee2e6;
-}
-
-.timeline-content {
-    margin-bottom: 0;
-}
-
-.badge-lg {
-    font-size: 0.8em;
-    padding: 0.4rem 0.6rem;
-}
-
-/* Card hover effects */
-.timeline-content .card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.timeline-content .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-/* Version-specific timeline markers */
-.timeline-item:nth-child(1) .timeline-marker {
-    background: #007bff;
-    box-shadow: 0 0 0 3px #007bff33;
-}
-
-.timeline-item:nth-child(2) .timeline-marker {
-    background: #17a2b8;
-    box-shadow: 0 0 0 3px #17a2b833;
-}
-
-.timeline-item:nth-child(3) .timeline-marker {
-    background: #6c757d;
-    box-shadow: 0 0 0 3px #6c757d33;
-}
 
 .link-like-text {
     color: inherit;
     text-decoration: none;
 }
 .link-like-text:hover {
-    text-decoration: underline;
+    opacity: 0.8;
+}
+
+
+/* Carte carrée */
+.prompt-card-square {
+    border: 4px solid #111;
+    border-radius: 0; /* coins pointus */
+    overflow: hidden;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: #000;
+    position: relative;
+    cursor: pointer;
+}
+
+
+/* Petit effet "ça flotte" */
+.prompt-card-square:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.45);
+    border-color: #000;
+}
+
+/* Wrapper pour forcer le carré */
+.prompt-image-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1; /* carré parfait */
+}
+
+/* Image plein cadre */
+.prompt-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: filter 0.25s ease, transform 0.25s ease;
+}
+
+/* Désaturation au hover */
+.prompt-card-square:hover img {
+    filter: grayscale(100%) contrast(1.05) brightness(0.9);
+}
+
+/* Date en overlay */
+.prompt-date {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    border-radius: 0;
+    background: #000;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+/* Lien invisible couvrant toute la carte */
+.prompt-card-link {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    text-indent: -9999px;
+}
+
+/* On garde la date visible au-dessus */
+.prompt-date {
+    z-index: 3;
+    position: absolute;
+}
+
+.btn,
+.badge {
+    border-radius: 0;
+}
+
+.card-stats {
+    border-radius: 0; /* coins pointus */
 }

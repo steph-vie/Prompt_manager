@@ -64,6 +64,20 @@ def index(category_id=None):
     # Récupérer l'arbre des catégories pour la sidebar
     category_tree = CategoryService.get_tree()
 
+    # Pré-calculer des compteurs pour éviter les .count() en cascade dans le template
+    category_prompt_counts = dict(
+        db.session.query(Prompt.category_id, func.count(Prompt.id))
+        .filter(Prompt.category_id.isnot(None))
+        .group_by(Prompt.category_id)
+        .all()
+    )
+    category_children_counts = dict(
+        db.session.query(Category.parent_id, func.count(Category.id))
+        .filter(Category.parent_id.isnot(None))
+        .group_by(Category.parent_id)
+        .all()
+    )
+
     return render_template('index.html',
                            prompts=prompts,
                            tags=sorted(all_tags),
@@ -71,6 +85,8 @@ def index(category_id=None):
                            query=query or '',
                            pagination=pagination,
                            category_tree=category_tree,
+                           category_prompt_counts=category_prompt_counts,
+                           category_children_counts=category_children_counts,
                            selected_category=selected_category)
 
 
@@ -84,6 +100,18 @@ def view(prompt_id):
 
     prompt = Prompt.query.get_or_404(prompt_id)
     category_tree = CategoryService.get_tree()
+    category_prompt_counts = dict(
+        db.session.query(Prompt.category_id, func.count(Prompt.id))
+        .filter(Prompt.category_id.isnot(None))
+        .group_by(Prompt.category_id)
+        .all()
+    )
+    category_children_counts = dict(
+        db.session.query(Category.parent_id, func.count(Category.id))
+        .filter(Category.parent_id.isnot(None))
+        .group_by(Category.parent_id)
+        .all()
+    )
     all_tags = set(
         tag.strip()
         for p in Prompt.query.all()
@@ -92,6 +120,8 @@ def view(prompt_id):
     return render_template('view.html',
                            prompt=prompt,
                            category_tree=category_tree,
+                           category_prompt_counts=category_prompt_counts,
+                           category_children_counts=category_children_counts,
                            tags=sorted(all_tags))
 
 
@@ -106,21 +136,25 @@ def add():
     if request.method == 'POST':
         title = request.form['title']
         tags = request.form['tags']
-        categorie_id = request.form['categorie']
+        categorie_id = request.form.get('categorie') or None
 
         if not title.strip():
             flash("Le titre est obligatoire.", "error")
             return redirect(url_for('.add'))
 
         tags_cleaned = clean_tags(tags)
-        image = request.files['image']
+        image = request.files.get('image')
         filename = None
 
-        if image and allowed_file(image.filename):
-            ext = os.path.splitext(image.filename)[1]
-            filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
-            image.save(os.path.join(current_app.config['UPLOAD_FOLDER'],
-                                    filename))
+        # L'extraction de métadonnées repose sur l'image source.
+        if not image or not image.filename or not allowed_file(image.filename):
+            flash("Une image valide est obligatoire pour créer un prompt.", "error")
+            return redirect(url_for('.add'))
+
+        ext = os.path.splitext(image.filename)[1]
+        filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
+        image.save(os.path.join(current_app.config['UPLOAD_FOLDER'],
+                                filename))
         image_upload = ComfyUIImage(os.path.
                                     join(current_app.config['UPLOAD_FOLDER'],
                                          filename))
@@ -297,7 +331,10 @@ def delete_category(category_id):
 def manage_categories():
     category_tree = CategoryService.get_tree()
     return render_template('manage_categories.html',
-                           category_tree=category_tree)
+                           category_tree=category_tree,
+                           category_prompt_counts=dict(),
+                           category_children_counts=dict(),
+                           tags=[])
 
 
 # API pour l'arbre des catégories (pour JavaScript)
@@ -361,4 +398,8 @@ def statistiques():
                            nbr_prompts=nbr_prompts,
                            list_checkpoints=results_checkpoints,
                            loras=results_loras,
-                           list_tags=results_tags)
+                           list_tags=results_tags,
+                           category_tree=CategoryService.get_tree(),
+                           category_prompt_counts=dict(),
+                           category_children_counts=dict(),
+                           tags=[])
