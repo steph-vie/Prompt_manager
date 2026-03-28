@@ -1,6 +1,6 @@
 # 🎨 Prompt Manager
 
-[![Version](https://img.shields.io/badge/version-3.1.2-blue.svg)](https://github.com/steph-vie/Prompt_manager/releases)
+[![Version](https://img.shields.io/badge/version-4.0-blue.svg)](https://github.com/steph-vie/Prompt_manager/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.x-yellow.svg)](https://www.python.org/)
 

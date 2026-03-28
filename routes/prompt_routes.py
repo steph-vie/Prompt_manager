@@ -52,7 +52,7 @@ def index(category_id=None):
         )
 
     pagination = prompts_query.order_by(Prompt.id.desc()).paginate(page=page,
-                                                                   per_page=12)
+                                                                   per_page=current_app.config['IMG_PER_PAGE'])
     prompts = pagination.items
 
     all_tags = set(
