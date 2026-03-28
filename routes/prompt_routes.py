@@ -56,11 +56,11 @@ def index(category_id=None):
     prompts = pagination.items
 
     all_tags = set(
-        tag.strip()
+        tag.strip().lower()
         for p in Prompt.query.all()
         for tag in (p.tags or '').split(',')
+        if tag.strip()
     )
-
     # Récupérer l'arbre des catégories pour la sidebar
     category_tree = CategoryService.get_tree()
 
@@ -113,9 +113,10 @@ def view(prompt_id):
         .all()
     )
     all_tags = set(
-        tag.strip()
+        tag.strip().lower()
         for p in Prompt.query.all()
         for tag in (p.tags or '').split(',')
+        if tag.strip()
     )
     return render_template('view.html',
                            prompt=prompt,
