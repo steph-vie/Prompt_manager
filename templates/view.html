@@ -93,7 +93,7 @@
                     <div class="border border-3 p-3">
                         <strong>LoRAs</strong>
                         <div class="d-flex flex-wrap gap-2 mt-2">
-                            {% for lora in prompt.loras.split(',') %}
+                            {% for lora in prompt.loras.split(',') if lora.strip() != "None"%}
                                 <span class="badge bg-secondary">{{ lora.strip() }}</span>
                             {% endfor %}
                         </div>
