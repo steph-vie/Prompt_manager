@@ -103,6 +103,9 @@
 .link-like-text:hover {
     opacity: 0.8;
 }
+.white-text {
+    color: #fff;
+}
 
 
 /* Carte carrée */
