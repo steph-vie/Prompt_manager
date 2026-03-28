@@ -93,8 +93,8 @@
                     <div class="border border-3 p-3">
                         <strong>LoRAs</strong>
                         <div class="d-flex flex-wrap gap-2 mt-2">
-                            {% for lora in prompt.loras.split(',') %}
-                                <span class="badge bg-secondary">{{ lora.strip() }}</span>
+                            {% for lora in prompt.loras.split(',') if lora.strip() != "None"%}
+                                <a class="badge bg-secondary link-like-text white-text" href="{{ url_for('prompt.index',q=lora) }}">{{ lora.strip() }}</a>
                             {% endfor %}
                         </div>
                     </div>
@@ -109,7 +109,7 @@
             </h4>
             <div class="d-flex flex-wrap gap-2">
                 {% for tag in prompt.tags.split(',') %}
-                    <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                    <a class="badge bg-secondary link-like-text white-text" href="{{ url_for('prompt.index',tag=tag.strip() ) }}"><i class="fas fa-tag me-1"></i>{{ tag.strip() }}</a>
                 {% endfor %}
             </div>
         </div>

@@ -21,3 +21,4 @@ class Config:  # pylint: disable=too-few-public-methods
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = UPLOAD_FOLDER
     DB_FOLDER = DB_FOLDER
+    IMG_PER_PAGE = int(os.environ.get("IMG_PER_PAGE", 24))
