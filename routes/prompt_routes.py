@@ -12,6 +12,7 @@ from models import db, Prompt, Category
 from utils import ComfyUIImage, allowed_file, clean_tags, CategoryService
 from sqlalchemy import func
 from collections import Counter
+from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
 
@@ -87,7 +88,8 @@ def index(category_id=None):
                            category_tree=category_tree,
                            category_prompt_counts=category_prompt_counts,
                            category_children_counts=category_children_counts,
-                           selected_category=selected_category)
+                           selected_category=selected_category,
+                           app_version=__version__)
 
 
 @prompt_bp.route('/prompt/<int:prompt_id>')
@@ -123,7 +125,8 @@ def view(prompt_id):
                            category_tree=category_tree,
                            category_prompt_counts=category_prompt_counts,
                            category_children_counts=category_children_counts,
-                           tags=sorted(all_tags))
+                           tags=sorted(all_tags),
+                           app_version=__version__)
 
 
 @prompt_bp.route('/add', methods=['GET', 'POST'])
@@ -168,14 +171,16 @@ def add():
                             checkpoint=image_upload.get_checkpoint(),
                             loras=str(image_upload.get_loras()),
                             neg_prompt=image_upload.get_negative_prompt(),
-                            category_id=categorie_id
+                            category_id=categorie_id,
                             )
         db.session.add(new_prompt)
         db.session.commit()
         flash("Prompt ajouté avec succès.", "success")
         return redirect(url_for('.index'))
 
-    return render_template('add.html', liste_categories=category_options)
+    return render_template('add.html',
+                           liste_categories=category_options,
+                           app_version=__version__)
 
 
 @prompt_bp.route('/edit/<int:prompt_id>', methods=['GET', 'POST'])
@@ -335,7 +340,8 @@ def manage_categories():
                            category_tree=category_tree,
                            category_prompt_counts=dict(),
                            category_children_counts=dict(),
-                           tags=[])
+                           tags=[],
+                           app_version=__version__)
 
 
 # API pour l'arbre des catégories (pour JavaScript)
@@ -403,4 +409,5 @@ def statistiques():
                            category_tree=CategoryService.get_tree(),
                            category_prompt_counts=dict(),
                            category_children_counts=dict(),
-                           tags=[])
+                           tags=[],
+                           app_version=__version__)
