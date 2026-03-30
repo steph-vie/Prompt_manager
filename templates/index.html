@@ -22,8 +22,12 @@
             {% if selected_category %}
                 {{ selected_category.name }}
                 {% if selected_category.description %}
-                    <small class="text-muted">{{ selected_category.description }}</small>
+                    <small class="text-muted fs-4"><br/>{{ selected_category.description }}</small>
                 {% endif %}
+            {% elif selected_tag %}
+                {{ selected_tag }}
+            {% elif query %}
+                {{ query }}
             {% else %}
                 Tous les prompts
             {% endif %}
