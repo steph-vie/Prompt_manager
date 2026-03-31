@@ -34,6 +34,7 @@ def export_backup(filepath="backup.json"):
                 "neg_prompt": p.neg_prompt,
                 "category_id": p.category_id,
                 "image_filename": p.image_filename,
+                "prompt_raw": p.prompt_raw,
                 "created_at": p.created_at.isoformat() if p.created_at else None,
                 "updated_at": p.updated_at.isoformat() if p.updated_at else None,
             }
@@ -79,6 +80,7 @@ def restore_backup(filepath="backup.json"):
             neg_prompt=p["neg_prompt"],
             category_id=p["category_id"],
             image_filename=p["image_filename"],
+            prompt_raw=p["prompt_raw"],
             created_at=datetime.fromisoformat(p["created_at"]) if p["created_at"] else None,
             updated_at=datetime.fromisoformat(p["updated_at"]) if p["updated_at"] else None,
         )
