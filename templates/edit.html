@@ -10,13 +10,6 @@
         <div class="card-body p-4">
           <form method="POST" enctype="multipart/form-data">
             <div class="mb-4">
-              <label class="form-label fw-semibold text-dark">Titre</label>
-              <input type="text" name="title" class="form-control form-control-lg border-2" 
-                     value="{{ prompt.title }}" required 
-                     placeholder="Entrez le titre du prompt">
-            </div>
-            
-            <div class="mb-4">
               <label class="form-label fw-semibold text-dark">Catégorie</label>
               <select class="form-select form-select-lg border-2" name="categorie" id="categorie">
                 {% for value, label in liste_categories %}

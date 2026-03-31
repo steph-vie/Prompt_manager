@@ -25,7 +25,6 @@ def export_backup(filepath="backup.json"):
         "prompts": [
             {
                 "id": p.id,
-                "title": p.title,
                 "prompt": p.prompt,
                 "tags": p.tags,
                 "seed": p.seed,
@@ -71,7 +70,6 @@ def restore_backup(filepath="backup.json"):
     for p in data["prompts"]:
         prompt = Prompt(
             id=p["id"],
-            title=p["title"],
             prompt=p["prompt"],
             tags=p["tags"],
             seed=p["seed"],

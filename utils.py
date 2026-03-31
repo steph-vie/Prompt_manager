@@ -48,6 +48,15 @@ class ComfyUIImage:
 
     def get_steps(self):
         return self.get_value("steps")
+    
+    def get_cfg(self):
+        return self.get_value("cfg")
+    
+    def get_sampler(self):
+        return self.get_value("sampler_name")
+    
+    def get_scheduler(self):
+        return self.get_value("scheduler")
 
     def get_checkpoint(self):
         return self.get_value("base_ckpt_name").split("/")[-1].replace(".safetensors", "")
@@ -63,6 +72,9 @@ class ComfyUIImage:
 
         clean_loras = ",".join(lora.strip() for lora in loras)
         return clean_loras if loras else None
+    
+    def get_prompt_raw(self):
+        return self.prompt
 
 
 class CategoryService:

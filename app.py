@@ -30,8 +30,9 @@ def create_app():
     migrate.init_app(app, db)
     register_routes(app)
 
-    with app.app_context():
-        db.create_all()
+    if os.path.exists("migrations"):
+        with app.app_context():
+            upgrade()
 
     @app.cli.command("backup")
     @click.option("--output", default="backup.json", help="Fichier de sortie")
