@@ -122,7 +122,6 @@ def view(prompt_id):
         for tag in (p.tags or '').split(',')
         if tag.strip()
     )
-    print(prompt.seed)
     return render_template('view.html',
                            prompt=prompt,
                            category_tree=category_tree,

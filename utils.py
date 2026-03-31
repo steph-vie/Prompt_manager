@@ -62,17 +62,31 @@ class ComfyUIImage:
         return self.get_value("base_ckpt_name").split("/")[-1].replace(".safetensors", "")
 
     def get_loras(self):
-        """Retourne toutes les LoRAs trouvées (liste)"""
-        loras = []
+        """Retourne les LoRAs sous forme de dict {nom: model_weight}"""
+        loras = {}
+
         for node in self.prompt.values():
             inputs = node.get("inputs", {})
+
             for k, v in inputs.items():
                 if k.startswith("lora_name_"):
-                    loras.append(v.split("/")[-1].replace(".safetensors", ""))
+                    index = k.split("_")[-1]  # ex: "1", "2", "3"
 
-        clean_loras = ",".join(lora.strip() for lora in loras)
-        return clean_loras if loras else None
-    
+                    # ignorer les "None"
+                    if not v or v == "None":
+                        continue
+
+                    # nettoyer le nom
+                    lora_name = v.split("/")[-1].replace(".safetensors", "")
+
+                    # récupérer le poids associé
+                    weight_key = f"model_weight_{index}"
+                    weight = inputs.get(weight_key)
+
+                    loras[lora_name] = weight
+
+        return loras if loras else None
+
     def get_prompt_raw(self):
         return self.prompt
 
