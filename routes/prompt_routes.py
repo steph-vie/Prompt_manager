@@ -2,6 +2,7 @@
 
 import os
 import uuid
+import ast
 import json
 from flask import (
     Blueprint, render_template, request, redirect,
@@ -164,7 +165,7 @@ def add():
                             seed=image_upload.get_seed(),
                             steps=image_upload.get_steps(),
                             checkpoint=image_upload.get_checkpoint(),
-                            loras=str(image_upload.get_loras()),
+                            loras=image_upload.get_loras(),
                             neg_prompt=image_upload.get_negative_prompt(),
                             cfg=image_upload.get_cfg(),
                             prompt_raw=image_upload.get_prompt_raw(),
@@ -370,18 +371,16 @@ def statistiques():
 
     # Recuperation des Loras
     result_loras = db.session.query(Prompt.loras).all()
-    loras_sorted = dict(sorted(
-        Counter(
-            lora.strip()
-            for loras_per_prompt in result_loras
-            for loras in loras_per_prompt
-            for lora in str(loras).split(",")
-            if lora.strip() and lora.strip() != "None"
-        ).items(),
-        key=lambda x: x[1],
-        reverse=True
-    ))
-    results_loras = [(k, v) for k, v in loras_sorted.items()]
+    counter = Counter()
+
+    for (loras_dict,) in result_loras:
+        if not loras_dict:
+            continue
+
+        counter.update(loras_dict.keys())
+
+    loras_sorted = dict(sorted(counter.items(), key=lambda x: x[1], reverse=True))
+    results_loras = list(loras_sorted.items())
 
     # Recuperation du nbr de tags
     all_tags = db.session.query(Prompt.tags).all()
@@ -407,4 +406,5 @@ def statistiques():
                            category_prompt_counts=dict(),
                            category_children_counts=dict(),
                            tags=[],
+
                            app_version=__version__)

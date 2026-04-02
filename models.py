@@ -23,7 +23,7 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     steps = db.Column(db.Integer, nullable=True)
     checkpoint = db.Column(db.Text, nullable=True)
     cfg = db.Column(db.Float, nullable=True)
-    loras = db.Column(db.Text, nullable=True)
+    loras = db.Column(db.JSON, nullable=True)
     neg_prompt = db.Column(db.Text, nullable=True)
     prompt_raw = db.Column(db.JSON, nullable=True)
     sampler = db.Column(db.String(120), nullable=True)
