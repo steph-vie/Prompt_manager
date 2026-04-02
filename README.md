@@ -1,6 +1,5 @@
 # 🎨 Prompt Manager
 
-[![Version](https://img.shields.io/badge/version-4.1-blue.svg)](https://github.com/steph-vie/Prompt_manager/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.x-yellow.svg)](https://www.python.org/)
 
@@ -19,9 +18,12 @@ Pensée pour les amateurs de génération d’images (ComfyUI).
 🔢 **Extraction intelligente** : Récupération automatique depuis les métadonnées d'images
   - Seed
   - Steps
+  - Sample
+  - Scheduler
   - Checkpoint / Modèle
   - LoRAs utilisés
   - Prompt négatif
+  - Un archivage des informations en brut au format json
 
 ### Interface moderne
 - 🎨 **Design responsive** : Interface élégante avec Bootstrap 5
@@ -63,79 +65,12 @@ flask run
 docker compose up -d
 ```
 
-## 📦 Installation
-
-### Méthode 1 : Installation locale manuelle
-
-#### Prérequis
-- Python 3.8 ou supérieur
-- pip (gestionnaire de paquets Python)
-- virtualenv (recommandé)
-
-#### Étapes
-
-1. **Cloner le dépôt**
-```bash
-git clone https://github.com/steph-vie/Prompt_manager.git
-cd Prompt_manager
-```
-
-2. **Créer un environnement virtuel**
-```bash
-python3 -m venv venv
-
-# Sur Linux/macOS
-source venv/bin/activate
-
-# Sur Windows
-venv\Scripts\activate
-```
-
-3. **Installer les dépendances**
-```bash
-pip install -r requirements.txt
-```
-
-4. **Initialiser la base de données**
-```bash
-flask db upgrade
-```
-
-5. **Lancer l'application**
-```bash
-flask run
-```
-
 L'application sera accessible à l'adresse : **http://127.0.0.1:5000**
 
-### Méthode 2 : Installation avec Docker (Recommandé pour la production)
-
-#### Prérequis
-- Docker
-- Docker Compose
-
-#### Étapes
-
-1. **Cloner le dépôt**
+### ⚠️ En cas de maj de l'image
 ```bash
-git clone https://github.com/steph-vie/Prompt_manager.git
-cd Prompt_manager
-```
-2. **Modifier le .env**
-```bash
-HOST_PORT=5000
-DIR_BASE="a remplir"
-```
-
-3. **Lancer avec Docker Compose**
-```bash
-docker compose up -d
-
-# En cas de maj de l'image
 docker compose up -d --build
 ```
-
-L'application sera accessible à l'adresse : **http://localhost:5000**
 
 ### 🔧 Configuration `.env`
 

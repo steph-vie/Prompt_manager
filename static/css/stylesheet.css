@@ -43,7 +43,16 @@
 }
 
 
+.sticky-preview {
+    position: sticky;
+    top: 20px; /* espace avec le haut */
+}
 
+.sticky-preview img {
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 6px;
+}
 
 .icon-circle {
     width: 50px;
@@ -186,3 +195,23 @@
 .card-stats {
     border-radius: 0; /* coins pointus */
 }
+
+/* Formatage json */
+.json-block {
+    margin-top: 10px;
+}
+
+.json-block summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.json-block pre {
+    background: #fcf9f9;
+    color: #969494;
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: monospace;
+}
+

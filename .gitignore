@@ -5,3 +5,4 @@ database/*
 .env
 .DS_Store
 **/.DS_Store
+*.json

@@ -15,7 +15,6 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     __tablename__ = "prompts"
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120), nullable=False)
     prompt = db.Column(db.Text, nullable=False)
     tags = db.Column(db.String(120), nullable=True)
 
@@ -23,8 +22,12 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     seed = db.Column(db.Integer, nullable=True)
     steps = db.Column(db.Integer, nullable=True)
     checkpoint = db.Column(db.Text, nullable=True)
-    loras = db.Column(db.Text, nullable=True)
+    cfg = db.Column(db.Float, nullable=True)
+    loras = db.Column(db.JSON, nullable=True)
     neg_prompt = db.Column(db.Text, nullable=True)
+    prompt_raw = db.Column(db.JSON, nullable=True)
+    sampler = db.Column(db.String(120), nullable=True)
+    scheduler = db.Column(db.String(120), nullable=True)
 
     # Ajout de la référence à la catégorie
     category_id = db.Column(
@@ -39,7 +42,7 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
-        return f"<Prompt {self.title}>"
+        return f"<Prompt {self.id}>"
 
 
 class Category(db.Model):

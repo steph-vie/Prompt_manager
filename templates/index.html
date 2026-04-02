@@ -22,8 +22,12 @@
             {% if selected_category %}
                 {{ selected_category.name }}
                 {% if selected_category.description %}
-                    <small class="text-muted">{{ selected_category.description }}</small>
+                    <small class="text-muted fs-4"><br/>{{ selected_category.description }}</small>
                 {% endif %}
+            {% elif selected_tag %}
+                {{ selected_tag }}
+            {% elif query %}
+                {{ query }}
             {% else %}
                 Tous les prompts
             {% endif %}
@@ -63,12 +67,12 @@
                     <div class="card prompt-card-square" data-prompt-id="{{ prompt.id }}">
                         <a href="{{ url_for('prompt.view', prompt_id=prompt.id) }}"
                         class="prompt-card-link"
-                        aria-label="Voir le prompt {{ prompt.title }}"></a>
+                        aria-label="Voir le prompt {{ prompt.id }}"></a>
 
     {% if prompt.image_filename %}
         <div class="prompt-image-wrapper">
             <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
-                 alt="{{ prompt.title }}">
+                 alt="{{ prompt.id }}">
             <div class="prompt-date">
                 {{ prompt.created_at.strftime('%d/%m/%Y') }}
             </div>

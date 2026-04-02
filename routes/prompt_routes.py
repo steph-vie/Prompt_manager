@@ -2,16 +2,20 @@
 
 import os
 import uuid
+import ast
+import json
 from flask import (
     Blueprint, render_template, request, redirect,
     url_for, flash, current_app, jsonify
 )
 from werkzeug.utils import secure_filename
+from datetime import datetime
 
 from models import db, Prompt, Category
 from utils import ComfyUIImage, allowed_file, clean_tags, CategoryService
 from sqlalchemy import func
 from collections import Counter
+from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
 
@@ -48,7 +52,7 @@ def index(category_id=None):
         prompts_query = prompts_query.filter(Prompt.tags.like(f'%{tag}%'))
     if query:
         prompts_query = prompts_query.filter(
-            (Prompt.title.contains(query)) | (Prompt.prompt.contains(query)) | (Prompt.checkpoint.contains(query)) | (Prompt.loras.contains(query))
+            (Prompt.prompt.contains(query)) | (Prompt.checkpoint.contains(query)) | (Prompt.loras.contains(query))
         )
 
     pagination = prompts_query.order_by(Prompt.id.desc()).paginate(page=page,
@@ -77,7 +81,7 @@ def index(category_id=None):
         .group_by(Category.parent_id)
         .all()
     )
-
+ 
     return render_template('index.html',
                            prompts=prompts,
                            tags=sorted(all_tags),
@@ -87,7 +91,8 @@ def index(category_id=None):
                            category_tree=category_tree,
                            category_prompt_counts=category_prompt_counts,
                            category_children_counts=category_children_counts,
-                           selected_category=selected_category)
+                           selected_category=selected_category,
+                           app_version=__version__)
 
 
 @prompt_bp.route('/prompt/<int:prompt_id>')
@@ -123,7 +128,8 @@ def view(prompt_id):
                            category_tree=category_tree,
                            category_prompt_counts=category_prompt_counts,
                            category_children_counts=category_children_counts,
-                           tags=sorted(all_tags))
+                           tags=sorted(all_tags),
+                           app_version=__version__)
 
 
 @prompt_bp.route('/add', methods=['GET', 'POST'])
@@ -135,14 +141,8 @@ def add():
     """
     category_options = CategoryService.get_category_options()
     if request.method == 'POST':
-        title = request.form['title']
         tags = request.form['tags']
         categorie_id = request.form.get('categorie') or None
-
-        if not title.strip():
-            flash("Le titre est obligatoire.", "error")
-            return redirect(url_for('.add'))
-
         tags_cleaned = clean_tags(tags)
         image = request.files.get('image')
         filename = None
@@ -159,23 +159,28 @@ def add():
         image_upload = ComfyUIImage(os.path.
                                     join(current_app.config['UPLOAD_FOLDER'],
                                          filename))
-        new_prompt = Prompt(title=title,
-                            prompt=image_upload.get_positive_prompt(),
+        new_prompt = Prompt(prompt=image_upload.get_positive_prompt(),
                             tags=tags_cleaned,
                             image_filename=filename,
                             seed=image_upload.get_seed(),
                             steps=image_upload.get_steps(),
                             checkpoint=image_upload.get_checkpoint(),
-                            loras=str(image_upload.get_loras()),
+                            loras=image_upload.get_loras(),
                             neg_prompt=image_upload.get_negative_prompt(),
-                            category_id=categorie_id
+                            cfg=image_upload.get_cfg(),
+                            prompt_raw=image_upload.get_prompt_raw(),
+                            sampler=image_upload.get_sampler(),
+                            scheduler=image_upload.get_scheduler(),
+                            category_id=categorie_id,
                             )
         db.session.add(new_prompt)
         db.session.commit()
         flash("Prompt ajouté avec succès.", "success")
         return redirect(url_for('.index'))
 
-    return render_template('add.html', liste_categories=category_options)
+    return render_template('add.html',
+                           liste_categories=category_options,
+                           app_version=__version__)
 
 
 @prompt_bp.route('/edit/<int:prompt_id>', methods=['GET', 'POST'])
@@ -190,8 +195,6 @@ def edit(prompt_id):
     prompt = Prompt.query.get_or_404(prompt_id)
     category_options = CategoryService.get_category_options()
     if request.method == 'POST':
-        prompt.title = request.form['title']
-        # prompt.prompt = request.form['prompt']
         prompt.tags = clean_tags(request.form['tags'])
         prompt.category_id = request.form['categorie']
 
@@ -335,7 +338,8 @@ def manage_categories():
                            category_tree=category_tree,
                            category_prompt_counts=dict(),
                            category_children_counts=dict(),
-                           tags=[])
+                           tags=[],
+                           app_version=__version__)
 
 
 # API pour l'arbre des catégories (pour JavaScript)
@@ -367,18 +371,16 @@ def statistiques():
 
     # Recuperation des Loras
     result_loras = db.session.query(Prompt.loras).all()
-    loras_sorted = dict(sorted(
-        Counter(
-            lora.strip()
-            for loras_per_prompt in result_loras
-            for loras in loras_per_prompt
-            for lora in str(loras).split(",")
-            if lora.strip() and lora.strip() != "None"
-        ).items(),
-        key=lambda x: x[1],
-        reverse=True
-    ))
-    results_loras = [(k, v) for k, v in loras_sorted.items()]
+    counter = Counter()
+
+    for (loras_dict,) in result_loras:
+        if not loras_dict:
+            continue
+
+        counter.update(loras_dict.keys())
+
+    loras_sorted = dict(sorted(counter.items(), key=lambda x: x[1], reverse=True))
+    results_loras = list(loras_sorted.items())
 
     # Recuperation du nbr de tags
     all_tags = db.session.query(Prompt.tags).all()
@@ -403,4 +405,6 @@ def statistiques():
                            category_tree=CategoryService.get_tree(),
                            category_prompt_counts=dict(),
                            category_children_counts=dict(),
-                           tags=[])
+                           tags=[],
+
+                           app_version=__version__)
