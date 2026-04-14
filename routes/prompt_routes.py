@@ -397,20 +397,14 @@ def statistiques():
 
     results_tags = [(k, v) for k, v in dict_tags.items()]
 
-    ######
-    # Test de graphiques
-    ###############
-
+  
+    #### Récupération des informations pour l'affichage du camember pour les checkpoints
     all_checkpoints=[c[0] for c in db.session.query(Prompt.checkpoint).all()]
     counter_checkpoint=Counter(all_checkpoints)
-
-    print(counter_checkpoint)
-
     graph_checkpoints_labels=list(counter_checkpoint.keys())
     graph_checkpoints_values=list(counter_checkpoint.values())
 
-    # loras = ["lora1", "lora2", "lora1", "lora3", "lora1"]
-    # counter = Counter(loras)
+
 
 
 
