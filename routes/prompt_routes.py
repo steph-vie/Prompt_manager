@@ -397,6 +397,23 @@ def statistiques():
 
     results_tags = [(k, v) for k, v in dict_tags.items()]
 
+    ######
+    # Test de graphiques
+    ###############
+
+    all_checkpoints=[c[0] for c in db.session.query(Prompt.checkpoint).all()]
+    counter_checkpoint=Counter(all_checkpoints)
+
+    print(counter_checkpoint)
+
+    graph_checkpoints_labels=list(counter_checkpoint.keys())
+    graph_checkpoints_values=list(counter_checkpoint.values())
+
+    # loras = ["lora1", "lora2", "lora1", "lora3", "lora1"]
+    # counter = Counter(loras)
+
+
+
     return render_template('statistiques.html',
                            nbr_prompts=nbr_prompts,
                            list_checkpoints=results_checkpoints,
@@ -406,5 +423,6 @@ def statistiques():
                            category_prompt_counts=dict(),
                            category_children_counts=dict(),
                            tags=[],
-
+                           graph_checkpoints_labels=graph_checkpoints_labels,
+                           graph_checkpoints_values=graph_checkpoints_values,
                            app_version=__version__)

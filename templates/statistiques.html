@@ -31,6 +31,7 @@
             <!-- Résumé général -->
             <div class="card border-3 mb-4 card-stats">
                 <div class="card-body p-4">
+                    
                     <div class="d-flex align-items-center mb-3">
                         <div class="icon-circle bg-primary bg-opacity-10 me-3">
                             <i class="fas fa-database text-primary fs-4"></i>
@@ -44,7 +45,11 @@
                                 <i class="fas fa-file-alt text-primary fs-5 me-2"></i>
                                 <span class="fw-semibold text-dark">Nombre de documents</span>
                             </div>
-                            <span class="badge bg-primary fs-4 px-4 py-3 font-monospace">{{ nbr_prompts }}</span>
+                            
+                            <div>
+                                <span class="badge bg-primary fs-4 px-4 py-3 font-monospace">{{ nbr_prompts }}</span>
+                            </div>
+                         
                         </div>
                     </div>
                 </div>
@@ -116,6 +121,7 @@
                     </div>
                 </div>
             </div>
+               <canvas id="loraChart" width="200px" height="200px"></canvas>
             {% endif %}
         </div>
 
@@ -175,5 +181,30 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const data = {
+    labels: {{ graph_checkpoints_labels | tojson }},
+    datasets: [{
+        data: {{ graph_checkpoints_values | tojson }},
+        backgroundColor: [
+        '#0d6efd',
+        '#198754',
+        '#ffc107',
+        '#dc3545',
+        '#6f42c1'
+    ]
+    }]
+};
 
+const config = {
+    type: 'pie',
+    data: data,
+};
+
+new Chart(
+    document.getElementById('loraChart'),
+    config
+);
+</script>
 {% endblock %}
