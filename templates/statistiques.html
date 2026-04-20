@@ -31,7 +31,6 @@
             <!-- Résumé général -->
             <div class="card border-3 mb-4 card-stats">
                 <div class="card-body p-4">
-                    
                     <div class="d-flex align-items-center mb-3">
                         <div class="icon-circle bg-primary bg-opacity-10 me-3">
                             <i class="fas fa-database text-primary fs-4"></i>
@@ -40,17 +39,9 @@
                     </div>
 
                     <div class="param-card bg-gradient rounded-4 p-3" style="background: linear-gradient(135deg, #e7f1ff 0%, #f0f7ff 100%);">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-file-alt text-primary fs-5 me-2"></i>
-                                <span class="fw-semibold text-dark">Nombre de documents</span>
-                            </div>
-                            
-                            <div>
-                                <span class="badge bg-primary fs-4 px-4 py-3 font-monospace">{{ nbr_prompts }}</span>
-                            </div>
-                         
-                        </div>
+                            <span class="badge bg-primary fs-6 px-2 py-2 font-monospace"><i class="fa-solid fa-images text-white me-2"></i>{{ nbr_prompts }}</span>
+                            <span class="badge bg-primary fs-6 px-2 py-2 font-monospace"><i class="fa-solid fa-folder-open text-white me-2"></i>{{ taille_upload_folder }}</span>
+                            <span class="badge bg-primary fs-6 px-2 py-2 font-monospace"><i class="fa-solid fa-database text-white me-2"></i>{{ taille_bdd }}</span>
                     </div>
                 </div>
             </div>

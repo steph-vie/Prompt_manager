@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 
 from models import db, Prompt, Category
-from utils import ComfyUIImage, allowed_file, clean_tags, CategoryService
+from utils import ComfyUIImage, allowed_file, clean_tags, CategoryService, taille_path
 from sqlalchemy import func
 from collections import Counter
 from version import __version__
@@ -405,8 +405,10 @@ def statistiques():
     graph_checkpoints_values=list(counter_checkpoint.values())
 
 
-
-
+    ### Recuperation de la taille du dossier des images
+    taille_upload_folder = taille_path(current_app.config['UPLOAD_FOLDER'])
+    ### Recuperation de la taille de la bdd
+    taille_bdd = taille_path(current_app.config['DB_PATH'])
 
     return render_template('statistiques.html',
                            nbr_prompts=nbr_prompts,
@@ -419,4 +421,6 @@ def statistiques():
                            tags=[],
                            graph_checkpoints_labels=graph_checkpoints_labels,
                            graph_checkpoints_values=graph_checkpoints_values,
+                           taille_bdd=taille_bdd,
+                           taille_upload_folder=taille_upload_folder,
                            app_version=__version__)
