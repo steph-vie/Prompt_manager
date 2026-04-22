@@ -2,17 +2,15 @@
 
 import os
 import uuid
-import ast
-import json
 from flask import (
     Blueprint, render_template, request, redirect,
     url_for, flash, current_app, jsonify
 )
 from werkzeug.utils import secure_filename
-from datetime import datetime
-
 from models import db, Prompt, Category
-from utils import ComfyUIImage, allowed_file, clean_tags, CategoryService, taille_path
+from utils import (
+    ComfyUIImage, allowed_file, clean_tags, CategoryService,
+    taille_path)
 from sqlalchemy import func
 from collections import Counter
 from version import __version__
@@ -52,11 +50,14 @@ def index(category_id=None):
         prompts_query = prompts_query.filter(Prompt.tags.like(f'%{tag}%'))
     if query:
         prompts_query = prompts_query.filter(
-            (Prompt.prompt.contains(query)) | (Prompt.checkpoint.contains(query)) | (Prompt.loras.contains(query))
+            (Prompt.prompt.contains(query))
+            | (Prompt.checkpoint.contains(query))
+            | (Prompt.loras.contains(query))
         )
 
-    pagination = prompts_query.order_by(Prompt.id.desc()).paginate(page=page,
-                                                                   per_page=current_app.config['IMG_PER_PAGE'])
+    pagination = prompts_query.order_by(
+        Prompt.id.desc()).paginate(page=page,
+                                   per_page=current_app.config['IMG_PER_PAGE'])
     prompts = pagination.items
 
     all_tags = set(
@@ -68,7 +69,8 @@ def index(category_id=None):
     # Récupérer l'arbre des catégories pour la sidebar
     category_tree = CategoryService.get_tree()
 
-    # Pré-calculer des compteurs pour éviter les .count() en cascade dans le template
+    # Pré-calculer des compteurs pour éviter les .count()
+    # en cascade dans le template
     category_prompt_counts = dict(
         db.session.query(Prompt.category_id, func.count(Prompt.id))
         .filter(Prompt.category_id.isnot(None))
@@ -81,7 +83,7 @@ def index(category_id=None):
         .group_by(Category.parent_id)
         .all()
     )
- 
+
     return render_template('index.html',
                            prompts=prompts,
                            tags=sorted(all_tags),
@@ -149,7 +151,8 @@ def add():
 
         # L'extraction de métadonnées repose sur l'image source.
         if not image or not image.filename or not allowed_file(image.filename):
-            flash("Une image valide est obligatoire pour créer un prompt.", "error")
+            flash("Une image valide est obligatoire pour créer un prompt.",
+                  "error")
             return redirect(url_for('.add'))
 
         ext = os.path.splitext(image.filename)[1]
@@ -319,7 +322,8 @@ def delete_category(category_id):
 
     if prompts_count > 0 or children_count > 0:
         flash(
-            f'Impossible de supprimer "{category.name}": elle contient {prompts_count} prompt(s) et {children_count} sous-catégorie(s)',
+            f'Impossible de supprimer "{category.name}": elle contient ' |
+            '{prompts_count} prompt(s) et {children_count} sous-catégorie(s)',
             'error')
         return redirect(url_for('prompt.manage_categories'))
 
@@ -357,30 +361,44 @@ def statistiques():
 
     # Recuperation des checkpoints
     nbr_prompts = Prompt.query.count()
+
+    count_checkpoint = func.count(Prompt.checkpoint)
+
     results_checkpoints = (
-    db.session.query(
-        Prompt.checkpoint,
-        func.count(Prompt.checkpoint).label("count")
+        db.session.query(
+            Prompt.checkpoint,
+            count_checkpoint.label("count"),
+        )
+        .group_by(Prompt.checkpoint)
+        .order_by(func.count(Prompt.checkpoint).desc())
     )
-    .group_by(Prompt.checkpoint)
-    .order_by(func.count(Prompt.checkpoint).desc())  # tri décroissant par occurrence
-    .all()
-)
     # Convertir en vrais tuples
-    results_checkpoints = [(r.checkpoint, r.count) for r in results_checkpoints]
+    results_checkpoints = [(r.checkpoint, r.count)
+                           for r in results_checkpoints]
 
     # Recuperation des Loras
     result_loras = db.session.query(Prompt.loras).all()
-    counter = Counter()
 
+    counter = Counter()
+    all_loras = []
     for (loras_dict,) in result_loras:
         if not loras_dict:
             continue
 
         counter.update(loras_dict.keys())
 
-    loras_sorted = dict(sorted(counter.items(), key=lambda x: x[1], reverse=True))
+        # recuperation pour le camembert
+        for k in loras_dict.keys():
+            all_loras.append(k)
+
+    loras_sorted = dict(sorted(counter.items(),
+                               key=lambda x: x[1],
+                               reverse=True))
     results_loras = list(loras_sorted.items())
+
+    counter_loras = Counter(all_loras)
+    graph_loras_labels = list(counter_loras.keys())
+    graph_loras_values = list(counter_loras.values())
 
     # Recuperation du nbr de tags
     all_tags = db.session.query(Prompt.tags).all()
@@ -397,17 +415,16 @@ def statistiques():
 
     results_tags = [(k, v) for k, v in dict_tags.items()]
 
-  
-    #### Récupération des informations pour l'affichage du camember pour les checkpoints
-    all_checkpoints=[c[0] for c in db.session.query(Prompt.checkpoint).all()]
-    counter_checkpoint=Counter(all_checkpoints)
-    graph_checkpoints_labels=list(counter_checkpoint.keys())
-    graph_checkpoints_values=list(counter_checkpoint.values())
+    # Récupération des informations pour l'affichage du camember
+    # pour les checkpoints
+    all_checkpoints = [c[0] for c in db.session.query(Prompt.checkpoint).all()]
+    counter_checkpoint = Counter(all_checkpoints)
+    graph_checkpoints_labels = list(counter_checkpoint.keys())
+    graph_checkpoints_values = list(counter_checkpoint.values())
 
-
-    ### Recuperation de la taille du dossier des images
+    # Recuperation de la taille du dossier des images
     taille_upload_folder = taille_path(current_app.config['UPLOAD_FOLDER'])
-    ### Recuperation de la taille de la bdd
+    # Recuperation de la taille de la bdd
     taille_bdd = taille_path(current_app.config['DB_PATH'])
 
     return render_template('statistiques.html',
@@ -421,6 +438,8 @@ def statistiques():
                            tags=[],
                            graph_checkpoints_labels=graph_checkpoints_labels,
                            graph_checkpoints_values=graph_checkpoints_values,
+                           graph_loras_labels=graph_loras_labels,
+                           graph_loras_values=graph_loras_values,
                            taille_bdd=taille_bdd,
                            taille_upload_folder=taille_upload_folder,
                            app_version=__version__)

@@ -26,157 +26,139 @@
 
     <!-- Contenu principal -->
     <div class="row g-4">
-        <!-- Colonne principale -->
-        <div class="col-lg-8">
-            <!-- Résumé général -->
-            <div class="card border-3 mb-4 card-stats">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-primary bg-opacity-10 me-3">
-                            <i class="fas fa-database text-primary fs-4"></i>
+        <div class="col-lg-12">
+            <div class="card border-3 mb-2 card-stats">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-circle bg-primary bg-opacity-10 me-3">
+                                <i class="fas fa-database text-primary fs-4"></i>
+                            </div>
+                            <h4 class="mb-0 text-primary fw-bold">Résumé Général</h4>
                         </div>
-                        <h4 class="mb-0 text-primary fw-bold">Résumé Général</h4>
-                    </div>
 
-                    <div class="param-card bg-gradient rounded-4 p-3" style="background: linear-gradient(135deg, #e7f1ff 0%, #f0f7ff 100%);">
-                            <span class="badge bg-primary fs-6 px-2 py-2 font-monospace"
-                                  data-bs-toggle="tooltip"
-                                  title="Nombre de prompts">
-                                  <i class="fa-solid fa-images text-white me-2"></i>{{ nbr_prompts }}</span>
-                            <span class="badge bg-primary fs-6 px-2 py-2 font-monospace" 
-                                  data-bs-toggle="tooltip"
-                                  title="Taille du dossier d'upload">
-                                  <i class="fa-solid fa-folder-open text-white me-2"></i>{{ taille_upload_folder }}</span>
-                            <span class="badge bg-primary fs-6 px-2 py-2 font-monospace"
-                                  data-bs-toggle="tooltip"
-                                  title="Taille de la base de données"><i class="fa-solid fa-database text-white me-2"></i>{{ taille_bdd }}</span>
+                        <div class="param-card bg-gradient rounded-4 p-3" style="background: linear-gradient(135deg, #e7f1ff 0%, #f0f7ff 100%);">
+                                <span class="badge bg-primary fs-6 px-2 py-2 font-monospace"
+                                    data-bs-toggle="tooltip"
+                                    title="Nombre de prompts">
+                                    <i class="fa-solid fa-images text-white me-2"></i>{{ nbr_prompts }}</span>
+                                <span class="badge bg-primary fs-6 px-2 py-2 font-monospace" 
+                                    data-bs-toggle="tooltip"
+                                    title="Taille du dossier d'upload">
+                                    <i class="fa-solid fa-folder-open text-white me-2"></i>{{ taille_upload_folder }}</span>
+                                <span class="badge bg-primary fs-6 px-2 py-2 font-monospace"
+                                    data-bs-toggle="tooltip"
+                                    title="Taille de la base de données"><i class="fa-solid fa-database text-white me-2"></i>{{ taille_bdd }}</span>
+                        </div>
                     </div>
-                </div>
             </div>
-
-            <!-- Tableau des checkpoints -->
+        </div>
+        <!-- Tableau des checkpoints -->
+        <div class="col-lg-4">
             <div class="card border-3 mb-4 card-stats">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
                         <div class="icon-circle bg-success bg-opacity-10 me-3">
                             <i class="fas fa-bookmark text-success fs-4"></i>
                         </div>
-                        <h4 class="mb-0 text-success fw-bold">Utilisation des Checkpoints: {{ list_checkpoints| length }}</h4>
+                        <h4 class="mb-0 fw-bold">Checkpoints{% if list_tags|length > 0 %} ({{ list_checkpoints | length }}){% endif %}</h4>
                     </div>
 
                     {% if list_checkpoints %}
-                    <div class="table-responsive">
-                        <table class="table table-hover border-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-0 fw-semibold text-dark py-3">
-                                        <i class="fas fa-bookmark me-2"></i>Checkpoint
-                                    </th>
-                                    <th class="border-0 fw-semibold text-dark py-3">
-                                        <i class="fas fa-chart-bar me-2"></i>Utilisation
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                    
+                        <!-- Camembert -->
+                        <div class="p-4">
+                        <canvas id="checkpointChart"></canvas>
+                        </div>
+
+                        <details>
+                            <summary>Voir la liste des checkpoints</summary>
+
+                                <div class="d-flex flex-wrap gap-2 mt-2">
                                 {% for checkpoint, count in list_checkpoints %}
-                                <tr>
-                                    <td class="border-0 py-3">
-                                        <a class="fw-medium link-like-text" href="{{ url_for('prompt.index',q=checkpoint) }}">
-                                            {{ checkpoint[:50] }}{% if checkpoint|length > 50 %}...{% endif %}
-                                        </a>
-                                    </td>
-                                    <td class="border-0 py-3">
-                                        <span class="badge bg-success bg-opacity-75 fs-6 px-3 py-2 font-monospace">{{ count }}</span>
-                                    </td>
-                                </tr>
+                                    <a class="badge bg-success bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',q=checkpoint) }}">
+                                    {{ checkpoint[:50] }}{% if checkpoint|length > 50 %}...{% endif %} [{{ count }}]
+                                    </a>
                                 {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                </div>
+
+                        </details>
+                       
                     {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-exclamation-circle text-muted fs-2 mb-3"></i>
-                        <p class="text-muted mb-0">Aucun checkpoint disponible</p>
-                    </div>
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-circle text-muted fs-2 mb-3"></i>
+                            <p class="text-muted mb-0">Aucun checkpoint disponible</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
-
-            <!-- Tableau des tags -->
-            {% if list_tags %}
-            <div class="card border-3 mb-4 card-stats">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-secondary bg-opacity-10 me-3">
-                            <i class="fas fa-tags text-secondary fs-4"></i>
-                        </div>
-                        <h4 class="mb-0 text-secondary fw-bold">Utilisation des Tags : {{ list_tags | length }}</h4>
-                    </div>
-
-                    <div class="table-responsive">
-                                {% for tag, count in list_tags %}
-                                        <a class="btn btn-secondary m-1" href="{{ url_for('prompt.index',tag=tag ) }}"><i class="fas fa-tag me-1"></i>{{ tag.strip() }} <span class="badge text-bg-secondary">{{ count }}</span></a>
-                                {% endfor %}
-                    </div>
-                </div>
-            </div>
-               <canvas id="loraChart" width="200px" height="200px"></canvas>
-            {% endif %}
         </div>
 
-        <!-- Sidebar droite - LoRAs -->
+        <!-- Tableau des LoRAs -->
         <div class="col-lg-4">
-            {% if loras %}
-            <div class="card border-3 card-stats">
+            
+            
+            <div class="card border-3 mb-4 card-stats">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center mb-3">
                         <div class="icon-circle bg-info bg-opacity-10 me-3">
                             <i class="fas fa-layer-group text-info fs-4"></i>
                         </div>
-                        <h4 class="mb-0 text-info fw-bold">LoRAs Disponibles: {{ loras | length }}</h4>
+                        <h4 class="mb-0 fw-bold">LoRAs{% if lora|length > 0 %} ({{ loras | length }}){% endif %}</h4>
                     </div>
+                    {% if loras %}
+                        <!-- Camembert -->
+                        <div class="p-4">
+                            <canvas id="lorasChart"></canvas>
+                        </div>
+                        <details>
+                            <summary>Voir la liste des checkpoints</summary>
 
-                    <div class="table-responsive">
-                        <table class="table table-hover border-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-0 fw-semibold text-dark py-3">
-                                        <i class="fas fa-bookmark me-2"></i>Checkpoint
-                                    </th>
-                                    <th class="border-0 fw-semibold text-dark py-3">
-                                        <i class="fas fa-chart-bar me-2"></i>Utilisation
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for lora, count in loras %}
-                                <tr>
-                                    <td class="border-0 py-3">
-                                        <a class="fw-medium link-like-text" href="{{ url_for('prompt.index',q=lora) }}">
-                                            {{ lora[:30] }}{% if lora|length > 30 %}...{% endif %}
-                                        </a>
-                                    </td>
-                                    <td class="border-0 py-3">
-                                        <span class="badge bg-info bg-opacity-75 fs-6 px-3 py-2 font-monospace">{{ count }}</span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                            {% for lora, count in loras %}
+
+                                <a class="badge bg-info bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',q=lora) }}">
+                                                    {{ lora[:30] }}{% if lora|length > 30 %}...{% endif %} [{{ count }}]
+                                </a>
+                            {% endfor %}
+                            </div>
+                        </details>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-circle text-muted fs-2 mb-3"></i>
+                            <p class="text-muted mb-0">Aucun Loras disponible</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tableau des tags -->
+        <div class="col-lg-4">
+            
+            <div class="card border-3 mb-3 mb-4 card-stats">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-secondary bg-opacity-10 me-3">
+                            <i class="fas fa-tags text-secondary fs-4"></i>
+                        </div>
+                        <h4 class="mb-0 fw-bold">Tags{% if list_tags|length > 0 %} ({{ list_tags | length }}) {% endif %} </h4>
+                        </div>
+                        {% if list_tags %}
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                    {% for tag, count in list_tags %}
+                                            <a class="btn btn-secondary m-1" href="{{ url_for('prompt.index',tag=tag ) }}"><i class="fas fa-tag me-1"></i>{{ tag.strip() }} <span class="badge text-bg-secondary">{{ count }}</span></a>
+                                    {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-exclamation-circle text-muted fs-2 mb-3"></i>
+                            <p class="text-muted mb-0">Aucun tags</p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-            {% else %}
-            <div class="card border-0 shadow-lg">
-                <div class="card-body p-4 text-center">
-                    <div class="icon-circle bg-secondary bg-opacity-10 mx-auto mb-3" style="width: 60px; height: 60px;">
-                        <i class="fas fa-layer-group text-secondary fs-3"></i>
-                    </div>
-                    <h5 class="text-secondary mb-2">Aucune LoRA</h5>
-                    <p class="text-muted mb-0">Aucune LoRA disponible pour le moment</p>
-                </div>
-            </div>
-            {% endif %}
+            
         </div>
     </div>
 </div>
@@ -190,28 +172,45 @@ document.addEventListener("DOMContentLoaded", function () {
   })
 })
 
-const data = {
+const checkpoints_data = {
     labels: {{ graph_checkpoints_labels | tojson }},
     datasets: [{
         data: {{ graph_checkpoints_values | tojson }},
-        backgroundColor: [
-        '#0d6efd',
-        '#198754',
-        '#ffc107',
-        '#dc3545',
-        '#6f42c1'
-    ]
-    }]
+        hoverOffset: 25,
+        hoverBorderWidth: 8,
+        hoverBorderColor: '#aaa'
+        }]
 };
-
-const config = {
+const checkpoint_config = {
     type: 'pie',
-    data: data,
+    data: checkpoints_data,
 };
-
 new Chart(
-    document.getElementById('loraChart'),
-    config
+    document.getElementById('checkpointChart'),
+    checkpoint_config
 );
+
+
+
+const loras_data = {
+    labels: {{ graph_loras_labels | tojson }},
+    datasets: [{
+        data: {{ graph_loras_values | tojson }},
+        hoverOffset: 25,
+        hoverBorderWidth: 8,
+        hoverBorderColor: '#aaa'
+        }]
+    
+};
+const loras_config = {
+    type: 'pie',
+    data: loras_data,
+};
+new Chart(
+    document.getElementById('lorasChart'),
+    loras_config
+);
+
+
 </script>
 {% endblock %}
