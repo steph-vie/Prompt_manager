@@ -4,6 +4,7 @@ from config import ALLOWED_EXTENSIONS
 from models import db, Category
 import json
 from PIL import Image
+from pathlib import Path
 
 
 class ComfyUIImage:
@@ -160,3 +161,27 @@ def clean_tags(tag_string):
     :return: Chaine de charactere representant tous les tags sans les espaces
     """
     return ','.join(tag.strip().lower() for tag in tag_string.split(','))
+
+
+def taille_path(path, lisible=True):
+    path = Path(path)
+
+    if not path.exists():
+        raise FileNotFoundError(f"{path} n'existe pas")
+
+    # Calcul taille
+    if path.is_file():
+        taille = path.stat().st_size
+    else:
+        taille = sum(f.stat().st_size for f in path.rglob('*') if f.is_file())
+
+    if not lisible:
+        return taille
+
+    # Format lisible
+    for unite in ['o', 'Ko', 'Mo', 'Go', 'To', 'Po']:
+        if taille < 1024:
+            return f"{taille:.2f} {unite}"
+        taille /= 1024
+
+    return f"{taille:.2f} Po"
