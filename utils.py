@@ -11,6 +11,7 @@ class ComfyUIImage:
     def __init__(self, image_path):
         self.image_path = image_path
         self.prompt = self._extract_prompt()
+        self.workflow_type = self._detect_workflow()
 
     def _extract_prompt(self):
         """Extrait le JSON du champ 'prompt' dans les métadonnées PNG"""
@@ -24,21 +25,100 @@ class ComfyUIImage:
         except json.JSONDecodeError:
             raise ValueError("❌ Impossible de décoder le JSON du champ 'prompt'.")
 
+    def _detect_workflow(self):
+        """Détecte le type de workflow utilisé."""
+
+        class_types = {
+            node.get("class_type")
+            for node in self.prompt.values()
+        }
+
+        if "UNETLoader" in class_types:
+            return "anima"
+        else:
+            return "illustrious"
+
+    @property
+    def is_illustrious(self):
+        return self.workflow_type == "illustrious"
+
+    @property
+    def is_anima(self):
+        return self.workflow_type == "anima"
+
+    #
+    # Helpers
+    #
+    def find_node(self, class_type):
+        for node in self.prompt.values():
+            if node.get("class_type") == class_type:
+                return node
+        return None
+
+    def find_nodes(self, class_type):
+        return [
+            node
+            for node in self.prompt.values()
+            if node.get("class_type") == class_type
+        ]
+
+    def get_input(self, node, key, default=None):
+        if not node:
+            return default
+        return node.get("inputs", {}).get(key, default)
+
     def get_value(self, value):
         """Cherche une clé dans tous les nœuds du prompt (inputs seulement)"""
         for key, node in self.prompt.items():
             if value in list(node["inputs"].keys()):
-                # value = node.get("inputs", {}).get(key)
-                # if value is not None:
-                if type(node["inputs"][value]).__name__ != 'list':
-                    return node["inputs"][value]
+                inputs = node.get("inputs", {})
 
-    # Alias pratiques
+                if value in inputs and not isinstance(inputs[value], list):
+                    return inputs[value]
+
+        return None
+
+    #
+    # KSampler
+    #
+    def get_sampler_node(self):
+        return (
+                self.find_node("KSampler")
+                or self.find_node("KSampler SDXL (Eff.)")
+        )
+
+    #
+    # Prompts
+    #
     def get_positive_prompt(self):
-        return self.get_value("positive")
+
+        # Workflow Illustrious
+        prompt = self.get_value("positive")
+        if isinstance(prompt, str):
+            return prompt
+
+        # Workflow Anima
+        for node in self.find_nodes("CLIPTextEncode"):
+            title = node.get("_meta", {}).get("title", "")
+            if "Positive" in title:
+                return self.get_input(node, "text")
+
+        return None
 
     def get_negative_prompt(self):
-        return self.get_value("negative")
+
+        # Workflow Illustrious
+        prompt = self.get_value("negative")
+        if isinstance(prompt, str):
+            return prompt
+
+        # Workflow Anima
+        for node in self.find_nodes("CLIPTextEncode"):
+            title = node.get("_meta", {}).get("title", "")
+            if "Negative" in title:
+                return self.get_input(node, "text")
+
+        return None
 
     def get_seed(self):
         seed_temp = self.get_value("seed")
@@ -46,6 +126,14 @@ class ComfyUIImage:
             return seed_temp
         else:
             return self.get_value("noise_seed")
+
+    def get_cliploader(self):
+        node = self.find_node("CLIPLoader")
+        if node:
+            cliploader = self.get_input(node,"clip_name")
+            return cliploader
+
+        return None
 
     def get_steps(self):
         return self.get_value("steps")
@@ -59,34 +147,69 @@ class ComfyUIImage:
     def get_scheduler(self):
         return self.get_value("scheduler")
 
+    #
+    # Checkpoint
+    #
     def get_checkpoint(self):
-        return self.get_value("base_ckpt_name").split("/")[-1].replace(".safetensors", "")
 
+        # Illustrious
+        node = self.find_node("Eff. Loader SDXL")
+        if node:
+            checkpoint = self.get_input(node, "base_ckpt_name")
+            if checkpoint:
+                return checkpoint.split("/")[-1].replace(".safetensors", "")
+
+        # Anima
+        node = self.find_node("UNETLoader")
+        if node:
+            checkpoint = self.get_input(node, "unet_name")
+            if checkpoint:
+                return checkpoint.split("/")[-1].replace(".safetensors", "")
+
+        return None
+
+    #
+    # LoRAs
+    #
     def get_loras(self):
-        """Retourne les LoRAs sous forme de dict {nom: model_weight}"""
         loras = {}
 
+        # Format CR LoRA Stack (Illustrious)
         for node in self.prompt.values():
             inputs = node.get("inputs", {})
 
-            for k, v in inputs.items():
-                if k.startswith("lora_name_"):
-                    index = k.split("_")[-1]  # ex: "1", "2", "3"
+            for key, value in inputs.items():
 
-                    # ignorer les "None"
-                    if not v or v == "None":
-                        continue
+                if not key.startswith("lora_name_"):
+                    continue
 
-                    # nettoyer le nom
-                    lora_name = v.split("/")[-1].replace(".safetensors", "")
+                index = key.split("_")[-1]
 
-                    # récupérer le poids associé
-                    weight_key = f"model_weight_{index}"
-                    weight = inputs.get(weight_key)
+                if not value or value == "None":
+                    continue
 
-                    loras[lora_name] = weight
+                name = value.split("/")[-1].replace(".safetensors", "")
+                weight = inputs.get(f"model_weight_{index}")
 
-        return loras if loras else None
+                loras[name] = weight
+
+        # Format LoraLoaderModelOnly (Anima)
+        for node in self.find_nodes("LoraLoaderModelOnly"):
+
+            name = self.get_input(node, "lora_name")
+
+            if not name:
+                continue
+
+            name = name.split("/")[-1].replace(".safetensors", "")
+
+            loras[name] = self.get_input(
+                node,
+                "strength_model",
+                1.0
+            )
+
+        return loras or None
 
     def get_prompt_raw(self):
         return self.prompt
@@ -156,9 +279,9 @@ def allowed_file(filename):
 
 def clean_tags(tag_string):
     """
-    Enleve pour chaque tag les expaces avant et apres
-    :param filename: Chaine de charactere representant tous les tags
-    :return: Chaine de charactere representant tous les tags sans les espaces
+    Enlève pour chaque tag les espaces avant et apres
+    :param tag_string: Chaine de caractère représentant tous les tags
+    :return: Chaine de caractère représentant tous les tags sans les espaces
     """
     return ','.join(tag.strip().lower() for tag in tag_string.split(','))
 
