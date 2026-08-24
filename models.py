@@ -39,13 +39,18 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     # Image et timestamps
     image_filename = db.Column(db.String(120), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime,
+                           default=datetime.utcnow,
+                           onupdate=datetime.utcnow)
 
     def __repr__(self):
         return f"<Prompt {self.id}>"
 
 
 class Category(db.Model):
+    """
+    Modele repesentant une categorie pour un prompt
+    """
     __tablename__ = "categories"
 
     id = db.Column(db.Integer, primary_key=True)
