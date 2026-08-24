@@ -1,13 +1,13 @@
 """Application principale"""
 
 import os
+import click
 from flask import Flask
 from flask_migrate import Migrate, upgrade
+from flask.cli import with_appcontext
 from config import Config
 from models import db
 from routes import register_routes
-import click
-from flask.cli import with_appcontext
 from backup import export_backup, restore_backup
 
 
