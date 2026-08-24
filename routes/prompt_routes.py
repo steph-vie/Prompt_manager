@@ -2,17 +2,17 @@
 
 import os
 import uuid
+from collections import Counter
 from flask import (
     Blueprint, render_template, request, redirect,
     url_for, flash, current_app, jsonify
 )
 from werkzeug.utils import secure_filename
+from sqlalchemy import func
 from models import db, Prompt, Category
 from utils import (
     ComfyUIImage, allowed_file, clean_tags, CategoryService,
     taille_path)
-from sqlalchemy import func
-from collections import Counter
 from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
@@ -240,6 +240,7 @@ def delete(prompt_id):
 # Route pour créer une nouvelle catégorie
 @prompt_bp.route('/categories/new', methods=['GET', 'POST'])
 def new_category():
+    """Ajout d'une catégrorie"""
     if request.method == 'POST':
         name = request.form.get('name')
         description = request.form.get('description', '')
@@ -271,6 +272,7 @@ def new_category():
 # Route pour éditer une catégorie
 @prompt_bp.route('/categories/<int:category_id>/edit', methods=['GET', 'POST'])
 def edit_category(category_id):
+    """Edite un catégorie"""
     category = Category.query.get_or_404(category_id)
 
     if request.method == 'POST':
@@ -314,6 +316,7 @@ def edit_category(category_id):
 # Route pour supprimer une catégorie
 @prompt_bp.route('/categories/<int:category_id>/delete', methods=['POST'])
 def delete_category(category_id):
+    """Supprime une catégorie"""
     category = Category.query.get_or_404(category_id)
 
     # Vérifier s'il y a des prompts ou des sous-catégories
@@ -337,6 +340,7 @@ def delete_category(category_id):
 # Route pour gérer toutes les catégories
 @prompt_bp.route('/categories')
 def manage_categories():
+    """Gestion des catégories"""
     category_tree = CategoryService.get_tree()
     return render_template('manage_categories.html',
                            category_tree=category_tree,

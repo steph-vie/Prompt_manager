@@ -5,6 +5,7 @@ from version import __version__
 
 
 def export_backup(filepath="backup.json"):
+    """Exporte un backup sous forme d'un fichier backup.json"""
     categories = Category.query.all()
     prompts = Prompt.query.all()
 
@@ -47,6 +48,7 @@ def export_backup(filepath="backup.json"):
 
 
 def restore_backup(filepath="backup.json"):
+    """Restore a partir d'un fichier backup.json en locale"""
     from datetime import datetime
 
     with open(filepath, "r", encoding="utf-8") as f:
