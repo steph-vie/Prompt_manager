@@ -344,8 +344,8 @@ def manage_categories():
     category_tree = CategoryService.get_tree()
     return render_template('manage_categories.html',
                            category_tree=category_tree,
-                           category_prompt_counts=dict(),
-                           category_children_counts=dict(),
+                           category_prompt_counts={},
+                           category_children_counts={},
                            tags=[],
                            app_version=__version__)
 
@@ -353,6 +353,7 @@ def manage_categories():
 # API pour l'arbre des catégories (pour JavaScript)
 @prompt_bp.route('/api/categories/tree')
 def api_categories_tree():
+    """API pour l'arbre des catégories (pour JavaScript)"""
     root_categories = CategoryService.get_tree()
     tree = [CategoryService.build_tree_dict(cat) for cat in root_categories]
     return jsonify(tree)
@@ -362,6 +363,7 @@ def api_categories_tree():
 
 @prompt_bp.route('/statistiques')
 def statistiques():
+    """Génére toutes les elements pour le panneau des statistiques"""
 
     # Recuperation des checkpoints
     nbr_prompts = Prompt.query.count()
@@ -437,8 +439,8 @@ def statistiques():
                            loras=results_loras,
                            list_tags=results_tags,
                            category_tree=CategoryService.get_tree(),
-                           category_prompt_counts=dict(),
-                           category_children_counts=dict(),
+                           category_prompt_counts={},
+                           category_children_counts={},
                            tags=[],
                            graph_checkpoints_labels=graph_checkpoints_labels,
                            graph_checkpoints_values=graph_checkpoints_values,

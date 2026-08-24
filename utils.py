@@ -325,6 +325,7 @@ def clean_tags(tag_string):
 
 
 def taille_path(path, lisible=True):
+    """Retourne la taille du chemin donné"""
     path = Path(path)
 
     if not path.exists():
