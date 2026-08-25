@@ -1,13 +1,15 @@
 """Liste des fonctions utilitaires de l'application"""
 
+import json
+from pathlib import Path
+from PIL import Image
 from config import ALLOWED_EXTENSIONS
 from models import db, Category
-import json
-from PIL import Image
-from pathlib import Path
 
 
 class ComfyUIImage:
+    """Fonction globale représentant l'image uploadée"""
+
     def __init__(self, image_path):
         self.image_path = image_path
         self.prompt = self._extract_prompt()
@@ -23,7 +25,9 @@ class ComfyUIImage:
             data = json.loads(raw)
             return data
         except json.JSONDecodeError:
-            raise ValueError("❌ Impossible de décoder le JSON du champ 'prompt'.")
+            raise ValueError(
+                "❌ Impossible de décoder le JSON du champ 'prompt'."
+            )
 
     def _detect_workflow(self):
         """Détecte le type de workflow utilisé."""
@@ -35,27 +39,33 @@ class ComfyUIImage:
 
         if "UNETLoader" in class_types:
             return "anima"
-        else:
-            return "illustrious"
+        return "illustrious"
 
     @property
     def is_illustrious(self):
+        """teste si le type du workflow est illustrious"""
+
         return self.workflow_type == "illustrious"
 
     @property
     def is_anima(self):
+        """teste si le type du workflow est anima"""
+
         return self.workflow_type == "anima"
 
     #
     # Helpers
     #
     def find_node(self, class_type):
+        """Retourne le noeud pour la class_type donnée"""
+
         for node in self.prompt.values():
             if node.get("class_type") == class_type:
                 return node
         return None
 
     def find_nodes(self, class_type):
+        """Retourne les noeuds pour la class_type donnée"""
         return [
             node
             for node in self.prompt.values()
@@ -63,12 +73,14 @@ class ComfyUIImage:
         ]
 
     def get_input(self, node, key, default=None):
+        """Retourne la valeur dans imputs pour la clée donnée"""
         if not node:
             return default
         return node.get("inputs", {}).get(key, default)
 
     def get_value(self, value):
         """Cherche une clé dans tous les nœuds du prompt (inputs seulement)"""
+
         for key, node in self.prompt.items():
             if value in list(node["inputs"].keys()):
                 inputs = node.get("inputs", {})
@@ -82,6 +94,7 @@ class ComfyUIImage:
     # KSampler
     #
     def get_sampler_node(self):
+        """Retourne le noeud du sampler"""
         return (
                 self.find_node("KSampler")
                 or self.find_node("KSampler SDXL (Eff.)")
@@ -91,6 +104,7 @@ class ComfyUIImage:
     # Prompts
     #
     def get_positive_prompt(self):
+        """Retourne le prompt positif"""
 
         # Workflow Illustrious
         prompt = self.get_value("positive")
@@ -106,6 +120,7 @@ class ComfyUIImage:
         return None
 
     def get_negative_prompt(self):
+        """Retourne le prompt négatif"""
 
         # Workflow Illustrious
         prompt = self.get_value("negative")
@@ -121,36 +136,48 @@ class ComfyUIImage:
         return None
 
     def get_seed(self):
+        """Retourne le seed"""
+
         seed_temp = self.get_value("seed")
         if seed_temp is not None:
             return seed_temp
-        else:
-            return self.get_value("noise_seed")
+        return self.get_value("noise_seed")
 
     def get_cliploader(self):
+        """Retourne le clip Loader"""
+
         node = self.find_node("CLIPLoader")
         if node:
-            cliploader = self.get_input(node,"clip_name")
+            cliploader = self.get_input(node, "clip_name")
             return cliploader
 
         return None
 
     def get_steps(self):
+        """Retourne les Steps"""
+
         return self.get_value("steps")
-    
+
     def get_cfg(self):
+        """Retourne le CFG"""
+
         return self.get_value("cfg")
-    
+
     def get_sampler(self):
+        """Retourne le sampler"""
+
         return self.get_value("sampler_name")
-    
+
     def get_scheduler(self):
+        """Retourne le scheduler"""
+
         return self.get_value("scheduler")
 
     #
     # Checkpoint
     #
     def get_checkpoint(self):
+        """Retourne le Checkpoint"""
 
         # Illustrious
         node = self.find_node("Eff. Loader SDXL")
@@ -172,6 +199,7 @@ class ComfyUIImage:
     # LoRAs
     #
     def get_loras(self):
+        """Retourne les Loras"""
         loras = {}
 
         # Format CR LoRA Stack (Illustrious)
@@ -212,10 +240,12 @@ class ComfyUIImage:
         return loras or None
 
     def get_prompt_raw(self):
+        """Retourne le prompt brut"""
         return self.prompt
 
 
 class CategoryService:
+    """Gestion des catégories"""
 
     @staticmethod
     def get_tree():
@@ -240,6 +270,7 @@ class CategoryService:
         options = [('', '-- Aucune catégorie --')]
 
         def add_category_options(categories, level=0):
+            """Ajoute les options"""
             for category in categories:
                 # Caractère d'espacement japonais pour l'indentation
                 indent = "　" * level
@@ -255,11 +286,18 @@ class CategoryService:
     def move_category(category_id, new_parent_id):
         """Déplace une catégorie (avec vérification de boucles)"""
         category = Category.query.get(category_id)
-        new_parent = Category.query.get(new_parent_id) if new_parent_id else None
+        new_parent = (
+            Category.query.get(new_parent_id)
+            if new_parent_id
+            else None
+        )
 
         # Vérifier qu'on ne crée pas de boucle
-        if new_parent and (new_parent.id == category.id or category.is_ancestor_of(new_parent)):
-            raise ValueError("Impossible de déplacer : cela créerait une boucle")
+        if new_parent and (new_parent.id == category.id
+                           or category.is_ancestor_of(new_parent)):
+            raise ValueError(
+                "Impossible de déplacer : cela créerait une boucle"
+            )
 
         category.parent_id = new_parent_id
         db.session.commit()
@@ -287,6 +325,7 @@ def clean_tags(tag_string):
 
 
 def taille_path(path, lisible=True):
+    """Retourne la taille du chemin donné"""
     path = Path(path)
 
     if not path.exists():
