@@ -12,7 +12,7 @@ from sqlalchemy import func
 from models import db, Prompt, Category
 from utils import (
     ComfyUIImage, allowed_file, clean_tags, CategoryService,
-    taille_path)
+    taille_path, convert_to_webp)
 from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
@@ -155,13 +155,15 @@ def add():
                   "error")
             return redirect(url_for('.add'))
 
-        ext = os.path.splitext(image.filename)[1]
+        ext = ".webp"
         filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
-        image.save(os.path.join(current_app.config['UPLOAD_FOLDER'],
-                                filename))
-        image_upload = ComfyUIImage(os.path.
-                                    join(current_app.config['UPLOAD_FOLDER'],
-                                         filename))
+        path_filename = os.path.join(current_app.config['UPLOAD_FOLDER'],
+                                     filename)
+        image_upload = ComfyUIImage(image)
+
+        print(path_filename)
+        image_upload.optimize_image(path_filename)
+
         new_prompt = Prompt(prompt=image_upload.get_positive_prompt(),
                             tags=tags_cleaned,
                             image_filename=filename,
@@ -449,3 +451,22 @@ def statistiques():
                            taille_bdd=taille_bdd,
                            taille_upload_folder=taille_upload_folder,
                            app_version=__version__)
+
+
+@prompt_bp.route('/maintenance')
+def maintenance():
+    all_prompts = Prompt.query.all()
+    for prompt in all_prompts:
+
+        ext = os.path.splitext(prompt.image_filename)[1]
+        if ext != ".webp":
+            path_image_filename_ab = str(os.path.join(current_app.config['UPLOAD_FOLDER'], prompt.image_filename))
+            print(path_image_filename_ab + ": NO")
+            # Convertion en WEBP
+
+            convert_to_webp(path_image_filename_ab)
+
+            prompt.image_filename = new_image_filename
+            db.session.commit()
+
+    return redirect(url_for('.index'))
