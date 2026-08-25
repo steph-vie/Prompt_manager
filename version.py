@@ -1,2 +1,2 @@
 """Gere la version de l'application"""
-__version__ = "5.2"
+__version__ = "5.3"
