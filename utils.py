@@ -361,11 +361,14 @@ def taille_path(path, lisible=True):
 
 
 def convert_to_webp(path_image):
+    """Convertit l'image passée en parametre au format webp"""
 
+    filename_webp = str(Path(path_image).with_suffix(".webp"))
     with Image.open(path_image) as image:
         image.save(
-            path_image,
+            filename_webp,
             "WEBP",
             quality=90,
             method=6
         )
+
