@@ -3,7 +3,6 @@
 import os
 import uuid
 from collections import Counter
-from pathlib import Path
 from flask import (
     Blueprint, render_template, request, redirect,
     url_for, flash, current_app, jsonify
@@ -13,7 +12,7 @@ from sqlalchemy import func
 from models import db, Prompt, Category
 from utils import (
     ComfyUIImage, allowed_file, clean_tags, CategoryService,
-    taille_path, convert_to_webp)
+    taille_path)
 from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
@@ -452,29 +451,3 @@ def statistiques():
                            taille_bdd=taille_bdd,
                            taille_upload_folder=taille_upload_folder,
                            app_version=__version__)
-
-
-@prompt_bp.route('/maintenance')
-def maintenance():
-    all_prompts = Prompt.query.all()
-    nbr_convert_to_webp = 0
-    for prompt in all_prompts:
-
-        ext = os.path.splitext(prompt.image_filename)[1]
-        if ext != ".webp":
-
-            path_image_filename_ab = str(os.path.join(current_app.config['UPLOAD_FOLDER'], prompt.image_filename))
-            print(f"Modification de :{prompt.image_filename}")
-
-            # Convertion en WEBP
-            convert_to_webp(path_image_filename_ab)
-            nbr_convert_to_webp = nbr_convert_to_webp + 1
-
-            # Enregistrement du nouveau nom
-            new_image_filename = str(Path(prompt.image_filename).with_suffix(".webp"))
-            prompt.image_filename = new_image_filename
-            db.session.commit()
-
-    print(f"Modification de {nbr_convert_to_webp} prompts")
-
-    return redirect(url_for('.index'))

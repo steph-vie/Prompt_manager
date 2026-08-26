@@ -9,6 +9,7 @@ from config import Config
 from models import db
 from routes import register_routes
 from backup import export_backup, restore_backup
+from maintenance import convert_to_webp_all
 
 
 def create_app():
@@ -49,6 +50,13 @@ def create_app():
         """Restauration complète depuis un JSON."""
         restore_backup(input)
         click.echo(f"Base restaurée depuis : {input}")
+
+    @app.cli.command("convert_all")
+    @with_appcontext
+    def covert_all():
+        """Coversion de toutes les images"""
+        convert_to_webp_all()
+        click.echo("Toutes les conversions ont été effectuées")
 
     return app
 
