@@ -115,9 +115,13 @@ class ComfyUIImage:
         for node in self.find_nodes("CLIPTextEncode"):
             title = node.get("_meta", {}).get("title", "")
             if "Positive" in title:
-                return self.get_input(node, "text")
+                prompt = self.get_input(node, "text")
+                if isinstance(prompt, str):
+                    return prompt
+                else:
+                    return "Prompt non trouvé"
 
-        return None
+        return "Prompt non trouvé"
 
     def get_negative_prompt(self):
         """Retourne le prompt négatif"""
@@ -131,7 +135,11 @@ class ComfyUIImage:
         for node in self.find_nodes("CLIPTextEncode"):
             title = node.get("_meta", {}).get("title", "")
             if "Negative" in title:
-                return self.get_input(node, "text")
+                prompt = self.get_input(node, "text")
+                if isinstance(prompt, str):
+                    return prompt
+                else:
+                    return "Prompt non trouvé"
 
         return None
 
@@ -371,4 +379,3 @@ def convert_to_webp(path_image):
             quality=90,
             method=6
         )
-
