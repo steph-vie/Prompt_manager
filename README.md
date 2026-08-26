@@ -96,6 +96,11 @@ python.exe -m flask restore
 ```
 --help pour plus d'infos
 
+Conversion des images stockées au format webp
+```bash
+python.exe -m flask convert_all
+```
+
 ## 📜 Licence
 
 MIT — libre d’usage, de partage et de modification.
