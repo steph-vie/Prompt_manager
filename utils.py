@@ -243,6 +243,17 @@ class ComfyUIImage:
         """Retourne le prompt brut"""
         return self.prompt
 
+    def optimize_image(self, output_path, quality=90):
+        """Convertit l'image en WebP optimisé."""
+
+        with Image.open(self.image_path) as image:
+            image.save(
+                output_path,
+                "WEBP",
+                quality=quality,
+                method=6
+            )
+
 
 class CategoryService:
     """Gestion des catégories"""
@@ -347,3 +358,17 @@ def taille_path(path, lisible=True):
         taille /= 1024
 
     return f"{taille:.2f} Po"
+
+
+def convert_to_webp(path_image):
+    """Convertit l'image passée en parametre au format webp"""
+
+    filename_webp = str(Path(path_image).with_suffix(".webp"))
+    with Image.open(path_image) as image:
+        image.save(
+            filename_webp,
+            "WEBP",
+            quality=90,
+            method=6
+        )
+

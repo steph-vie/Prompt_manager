@@ -155,13 +155,15 @@ def add():
                   "error")
             return redirect(url_for('.add'))
 
-        ext = os.path.splitext(image.filename)[1]
+        ext = ".webp"
         filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
-        image.save(os.path.join(current_app.config['UPLOAD_FOLDER'],
-                                filename))
-        image_upload = ComfyUIImage(os.path.
-                                    join(current_app.config['UPLOAD_FOLDER'],
-                                         filename))
+        path_filename = os.path.join(current_app.config['UPLOAD_FOLDER'],
+                                     filename)
+        image_upload = ComfyUIImage(image)
+
+        print(path_filename)
+        image_upload.optimize_image(path_filename)
+
         new_prompt = Prompt(prompt=image_upload.get_positive_prompt(),
                             tags=tags_cleaned,
                             image_filename=filename,
