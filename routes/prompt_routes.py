@@ -161,7 +161,17 @@ def add():
                                      filename)
         image_upload = ComfyUIImage(image)
 
-        print(path_filename)
+        print('*** DEBUG ****')
+        print(f"prompt positif: {image_upload.get_positive_prompt()}")
+        print(f"prompt negatif: {image_upload.get_negative_prompt()}")
+        print(f"checkpoint: {image_upload.get_checkpoint()}")
+        print(f"loras: {image_upload.get_loras()}")
+        print(f"cfg: {image_upload.get_cfg()}")
+        print(f"sampler: {image_upload.get_sampler()}")
+        print(f"scheduler: {image_upload.get_scheduler()}")
+        print(f"seed: {image_upload.get_seed()}")
+        print('**************')
+
         image_upload.optimize_image(path_filename)
 
         new_prompt = Prompt(prompt=image_upload.get_positive_prompt(),
