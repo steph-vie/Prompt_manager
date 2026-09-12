@@ -72,6 +72,15 @@ class ComfyUIImage:
             if node.get("class_type") == class_type
         ]
 
+    def find_node_by_title(self,title):
+        """Retourne le noeud pour un titre donné"""
+        for node in self.prompt.values():
+            node_title = node.get("_meta", {}).get("title", "")
+            if str(node_title).lower() == title:
+                return node
+        return None
+
+
     def get_input(self, node, key, default=None):
         """Retourne la valeur dans imputs pour la clée donnée"""
         if not node:
@@ -112,14 +121,22 @@ class ComfyUIImage:
             return prompt
 
         # Workflow Anima
+
+        # Dans le cas d'un noeud CLIPTextEncode
         for node in self.find_nodes("CLIPTextEncode"):
             title = node.get("_meta", {}).get("title", "")
-            if "Positive" in title:
+            if "positive" in str(title).lower():
                 prompt = self.get_input(node, "text")
                 if isinstance(prompt, str):
                     return prompt
-                else:
-                    return "Prompt non trouvé"
+
+        # Dans le cas d'un noeud ImpactWildcardProcessor
+        for node in self.find_nodes("ImpactWildcardProcessor"):
+            title = node.get("_meta", {}).get("title", "")
+            if "positive" in str(title).lower():
+                prompt = self.get_input(node, "populated_text")
+                if isinstance(prompt, str):
+                    return prompt
 
         return "Prompt non trouvé"
 
@@ -164,17 +181,34 @@ class ComfyUIImage:
     def get_steps(self):
         """Retourne les Steps"""
 
-        return self.get_value("steps")
+        steps = self.get_value("steps")
+        if steps is not None:
+            return steps
+
+        node = self.find_node_by_title("steps")
+        if node is not None:
+            steps = self.get_input(node,"value")
+            return steps
+
+        return None
 
     def get_cfg(self):
         """Retourne le CFG"""
 
-        return self.get_value("cfg")
+        cfg = self.get_value("cfg")
+        if cfg is not None:
+            return cfg
+
+        node = self.find_node_by_title("cfg")
+        if node is not None:
+            cfg = self.get_input(node, "value")
+            return cfg
 
     def get_sampler(self):
         """Retourne le sampler"""
 
         return self.get_value("sampler_name")
+
 
     def get_scheduler(self):
         """Retourne le scheduler"""
@@ -216,7 +250,7 @@ class ComfyUIImage:
 
             for key, value in inputs.items():
 
-                if not key.startswith("lora_name_"):
+                if not key.startswith("lora_name"):
                     continue
 
                 index = key.split("_")[-1]
@@ -226,8 +260,11 @@ class ComfyUIImage:
 
                 name = value.split("/")[-1].replace(".safetensors", "")
                 weight = inputs.get(f"model_weight_{index}")
-
-                loras[name] = weight
+                if weight is not None:
+                    loras[name] = weight
+                else:
+                    weight = inputs.get("strength_model")
+                    loras[name] = weight
 
         # Format LoraLoaderModelOnly (Anima)
         for node in self.find_nodes("LoraLoaderModelOnly"):
