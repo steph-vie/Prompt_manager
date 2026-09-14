@@ -151,12 +151,18 @@ class ComfyUIImage:
         # Workflow Anima
         for node in self.find_nodes("CLIPTextEncode"):
             title = node.get("_meta", {}).get("title", "")
-            if "Negative" in title:
+            if "negative" in str(title).lower():
                 prompt = self.get_input(node, "text")
                 if isinstance(prompt, str):
                     return prompt
-                else:
-                    return "Prompt non trouvé"
+
+        # Dans le cas d'un noeud ImpactWildcardProcessor
+        for node in self.find_nodes("ImpactWildcardProcessor"):
+            title = node.get("_meta", {}).get("title", "")
+            if "negative" in str(title).lower():
+                prompt = self.get_input(node, "populated_text")
+                if isinstance(prompt, str):
+                    return prompt
 
         return None
 
@@ -235,6 +241,12 @@ class ComfyUIImage:
             if checkpoint:
                 return checkpoint.split("/")[-1].replace(".safetensors", "")
 
+        node = self.find_node("CheckpointLoaderSimple")
+        if node:
+            checkpoint = self.get_input(node, "ckpt_name")
+            if checkpoint:
+                return checkpoint.split("/")[-1].replace(".safetensors", "")
+
         return None
 
     #
@@ -281,6 +293,32 @@ class ComfyUIImage:
                 "strength_model",
                 1.0
             )
+
+        # Format Power Lora Loader (rgthree)
+        for node in self.find_nodes("Power Lora Loader (rgthree)"):
+            inputs = node.get("inputs", {})
+
+            for key, value in inputs.items():
+
+                if not key.startswith("lora_"):
+                    continue
+
+                if not isinstance(value, dict):
+                    continue
+
+                # LoRA désactivée
+                if not value.get("on", False):
+                    continue
+
+                lora_path = value.get("lora")
+                strength = value.get("strength")
+
+                if not lora_path:
+                    continue
+
+                name = lora_path.split("/")[-1].replace(".safetensors", "")
+
+                loras[name] = strength
 
         return loras or None
 
