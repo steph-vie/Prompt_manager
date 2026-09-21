@@ -1,3 +1,5 @@
+"""Liste des fonctions procedant à la maintenance generale de l'application"""
+
 import os
 from pathlib import Path
 from flask import current_app

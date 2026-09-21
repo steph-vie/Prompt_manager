@@ -1,3 +1,5 @@
+"""Liste des fonctions procedant aux backups de l'application"""
+
 import json
 from datetime import datetime
 from models import db, Prompt, Category

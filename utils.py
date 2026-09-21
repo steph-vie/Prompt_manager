@@ -72,14 +72,13 @@ class ComfyUIImage:
             if node.get("class_type") == class_type
         ]
 
-    def find_node_by_title(self,title):
+    def find_node_by_title(self, title):
         """Retourne le noeud pour un titre donné"""
         for node in self.prompt.values():
             node_title = node.get("_meta", {}).get("title", "")
             if str(node_title).lower() == title:
                 return node
         return None
-
 
     def get_input(self, node, key, default=None):
         """Retourne la valeur dans imputs pour la clée donnée"""
@@ -99,9 +98,8 @@ class ComfyUIImage:
 
         return None
 
-    #
     # KSampler
-    #
+
     def get_sampler_node(self):
         """Retourne le noeud du sampler"""
         return (
@@ -109,9 +107,7 @@ class ComfyUIImage:
                 or self.find_node("KSampler SDXL (Eff.)")
         )
 
-    #
     # Prompts
-    #
     def get_positive_prompt(self):
         """Retourne le prompt positif"""
 
@@ -193,7 +189,7 @@ class ComfyUIImage:
 
         node = self.find_node_by_title("steps")
         if node is not None:
-            steps = self.get_input(node,"value")
+            steps = self.get_input(node, "value")
             return steps
 
         return None
@@ -215,15 +211,12 @@ class ComfyUIImage:
 
         return self.get_value("sampler_name")
 
-
     def get_scheduler(self):
         """Retourne le scheduler"""
 
         return self.get_value("scheduler")
 
-    #
     # Checkpoint
-    #
     def get_checkpoint(self):
         """Retourne le Checkpoint"""
 
@@ -249,9 +242,7 @@ class ComfyUIImage:
 
         return None
 
-    #
     # LoRAs
-    #
     def get_loras(self):
         """Retourne les Loras"""
         loras = {}
