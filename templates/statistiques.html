@@ -65,23 +65,13 @@
 
                     {% if list_checkpoints %}
                     
-                        <!-- Camembert -->
-                        <div class="p-4">
-                        <canvas id="checkpointChart"></canvas>
-                        </div>
-
-                        <details>
-                            <summary>Voir la liste des checkpoints</summary>
-
-                                <div class="d-flex flex-wrap gap-2 mt-2">
-                                {% for checkpoint, count in list_checkpoints %}
-                                    <a class="badge bg-success bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',q=checkpoint) }}">
-                                    {{ checkpoint[:50] }}{% if checkpoint|length > 50 %}...{% endif %} [{{ count }}]
-                                    </a>
-                                {% endfor %}
-                                </div>
-
-                        </details>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                            {% for checkpoint, count in list_checkpoints %}
+                                <a class="badge bg-success bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',q=checkpoint) }}">
+                                {{ checkpoint[:50] }}{% if checkpoint|length > 50 %}...{% endif %} [{{ count }}]
+                                </a>
+                            {% endfor %}
+                            </div>
                        
                     {% else %}
                         <div class="text-center py-4">
@@ -106,22 +96,13 @@
                         <h4 class="mb-0 fw-bold">LoRAs{% if loras|length > 0 %} ({{ loras | length }}){% endif %}</h4>
                     </div>
                     {% if loras %}
-                        <!-- Camembert -->
-                        <div class="p-4">
-                            <canvas id="lorasChart"></canvas>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                        {% for lora, count in loras %}
+                            <a class="badge bg-info bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',q=lora) }}">
+                                                {{ lora[:30] }}{% if lora|length > 30 %}...{% endif %} [{{ count }}]
+                            </a>
+                        {% endfor %}
                         </div>
-                        <details>
-                            <summary>Voir la liste des Loras</summary>
-
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                            {% for lora, count in loras %}
-
-                                <a class="badge bg-info bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',q=lora) }}">
-                                                    {{ lora[:30] }}{% if lora|length > 30 %}...{% endif %} [{{ count }}]
-                                </a>
-                            {% endfor %}
-                            </div>
-                        </details>
                     {% else %}
                         <div class="text-center py-4">
                             <i class="fas fa-exclamation-circle text-muted fs-2 mb-3"></i>
@@ -146,7 +127,7 @@
                         {% if list_tags %}
                         <div class="d-flex flex-wrap gap-2 mt-2">
                                     {% for tag, count in list_tags %}
-                                            <a class="btn btn-secondary m-1" href="{{ url_for('prompt.index',tag=tag ) }}"><i class="fas fa-tag me-1"></i>{{ tag.strip() }} <span class="badge text-bg-secondary">{{ count }}</span></a>
+                                            <a class="badge bg-secondary bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',tag=tag ) }}"><i class="fas fa-tag me-1"></i>{{ tag.strip() }} [{{ count }}]</a>
                                     {% endfor %}
                         </div>
                         {% else %}
@@ -171,46 +152,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return new bootstrap.Tooltip(tooltipTriggerEl)
   })
 })
-
-const checkpoints_data = {
-    labels: {{ graph_checkpoints_labels | tojson }},
-    datasets: [{
-        data: {{ graph_checkpoints_values | tojson }},
-        hoverOffset: 25,
-        hoverBorderWidth: 2,
-        hoverBorderColor: '#666'
-        }]
-};
-const checkpoint_config = {
-    type: 'pie',
-    data: checkpoints_data,
-};
-new Chart(
-    document.getElementById('checkpointChart'),
-    checkpoint_config
-);
-
-
-
-const loras_data = {
-    labels: {{ graph_loras_labels | tojson }},
-    datasets: [{
-        data: {{ graph_loras_values | tojson }},
-        hoverOffset: 25,
-        hoverBorderWidth: 2,
-        hoverBorderColor: '#666'
-        }]
-    
-};
-const loras_config = {
-    type: 'pie',
-    data: loras_data,
-};
-new Chart(
-    document.getElementById('lorasChart'),
-    loras_config
-);
-
 
 </script>
 {% endblock %}

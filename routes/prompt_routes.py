@@ -398,33 +398,31 @@ def statistiques():
     result_loras = db.session.query(Prompt.loras).all()
 
     counter = Counter()
-    all_loras = []
+
     for (loras_dict,) in result_loras:
         if not loras_dict:
             continue
 
         counter.update(loras_dict.keys())
 
-        # recuperation pour le camembert
-        for k in loras_dict.keys():
-            all_loras.append(k)
-
     loras_sorted = dict(sorted(counter.items(),
                                key=lambda x: x[1],
                                reverse=True))
     results_loras = list(loras_sorted.items())
 
-    counter_loras = Counter(all_loras)
-    graph_loras_labels = list(counter_loras.keys())
-    graph_loras_values = list(counter_loras.values())
-
     # Recuperation du nbr de tags
-    all_tags = db.session.query(Prompt.tags).all()
+    all_tags_dict = db.session.query(Prompt.tags).all()
+
+    all_tags = set(
+        tag.strip().lower()
+        for p in Prompt.query.all()
+        for tag in (p.tags or '').split(',')
+        if tag.strip())
 
     dict_tags = dict(sorted(
         Counter(
             t.strip()
-            for tag in all_tags
+            for tag in all_tags_dict
             for p in tag
             for t in p.split(",")
         ).items(),
@@ -433,31 +431,43 @@ def statistiques():
 
     results_tags = [(k, v) for k, v in dict_tags.items()]
 
-    # Récupération des informations pour l'affichage du camember
-    # pour les checkpoints
-    all_checkpoints = [c[0] for c in db.session.query(Prompt.checkpoint).all()]
-    counter_checkpoint = Counter(all_checkpoints)
-    graph_checkpoints_labels = list(counter_checkpoint.keys())
-    graph_checkpoints_values = list(counter_checkpoint.values())
-
     # Recuperation de la taille du dossier des images
     taille_upload_folder = taille_path(current_app.config['UPLOAD_FOLDER'])
     # Recuperation de la taille de la bdd
     taille_bdd = taille_path(current_app.config['DB_PATH'])
+
+    # Récupérer les infos des catégories et tags pour la sidebar
+    category_tree = CategoryService.get_tree()
+    category_prompt_counts = dict(
+            db.session.query(Prompt.category_id, func.count(Prompt.id))
+            .filter(Prompt.category_id.isnot(None))
+            .group_by(Prompt.category_id)
+            .all()
+        )
+    category_children_counts = dict(
+            db.session.query(Category.parent_id, func.count(Category.id))
+            .filter(Category.parent_id.isnot(None))
+            .group_by(Category.parent_id)
+            .all()
+        )
+
+    print('*** DEBUG ****')
+    print(f"Liste des Checkpoints: {results_checkpoints}")
+    print(f"Liste des Loras: {results_loras}")
+    print(f"Liste des tags: {results_tags}")
+    print(f"all_tags: {all_tags}")
+    print(f"all_tags_dict: {all_tags_dict}")
+    print('**************')
 
     return render_template('statistiques.html',
                            nbr_prompts=nbr_prompts,
                            list_checkpoints=results_checkpoints,
                            loras=results_loras,
                            list_tags=results_tags,
-                           category_tree=CategoryService.get_tree(),
-                           category_prompt_counts={},
-                           category_children_counts={},
-                           tags=[],
-                           graph_checkpoints_labels=graph_checkpoints_labels,
-                           graph_checkpoints_values=graph_checkpoints_values,
-                           graph_loras_labels=graph_loras_labels,
-                           graph_loras_values=graph_loras_values,
+                           category_tree=category_tree,
+                           category_prompt_counts=category_prompt_counts,
+                           category_children_counts=category_children_counts,
+                           tags=sorted(all_tags),
                            taille_bdd=taille_bdd,
                            taille_upload_folder=taille_upload_folder,
                            app_version=__version__)
