@@ -1,12 +1,13 @@
 import os
-from models import Prompt, db
 from pathlib import Path
 from flask import current_app
+from models import Prompt, db
 from utils import convert_to_webp
 
 
 def convert_to_webp_all():
-    """Convertion de toutes les images png avec remplacement
+    """
+    Convertion de toutes les images png avec remplacement
     de l'extension dans la BDD
     """
     all_prompts = Prompt.query.all()

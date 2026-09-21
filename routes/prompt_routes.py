@@ -472,4 +472,3 @@ def statistiques():
                            taille_bdd=taille_bdd,
                            taille_upload_folder=taille_upload_folder,
                            app_version=__version__)
-# TODO: Refaire la partie statistiques
