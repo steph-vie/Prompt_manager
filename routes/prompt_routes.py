@@ -53,6 +53,7 @@ def index(category_id=None):
             (Prompt.prompt.contains(query))
             | (Prompt.checkpoint.contains(query))
             | (Prompt.loras.contains(query))
+            | (Prompt.neg_prompt.contains(query))
         )
 
     pagination = prompts_query.order_by(
