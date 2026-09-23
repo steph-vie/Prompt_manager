@@ -9,7 +9,7 @@ Pensée pour les amateurs de génération d’images (ComfyUI).
 ## ✨ Fonctionnalités
 
 ### Gestion des prompts
-- 📝 **CRUD complet** : Création, lecture, modification et suppression de prompts
+- 📝 **CRUD complet** : Création, lecture, modification et suppression de prompts (avec identification de doublons)
 - 🖼️ **Galerie visuelle** : Upload et association d'images pour chaque prompt
 - 🏷️ **Système de tags avancé** : Organisation par catégories personnalisées avec filtrage intelligent
 - 🔍 **Recherche puissante** : Recherche par mots-clés dans les titres et contenus
