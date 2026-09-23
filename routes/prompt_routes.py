@@ -381,56 +381,44 @@ def statistiques():
     # Recuperation des checkpoints
     nbr_prompts = Prompt.query.count()
 
-    count_checkpoint = func.count(Prompt.checkpoint)
-
     results_checkpoints = (
         db.session.query(
             Prompt.checkpoint,
-            count_checkpoint.label("count"),
+            func.count(Prompt.checkpoint).label("count"),
         )
         .group_by(Prompt.checkpoint)
         .order_by(func.count(Prompt.checkpoint).desc())
+        .all()
     )
-    # Convertir en vrais tuples
-    results_checkpoints = [(r.checkpoint, r.count)
-                           for r in results_checkpoints]
-
     # Recuperation des Loras
     result_loras = db.session.query(Prompt.loras).all()
 
-    counter = Counter()
+    counter = Counter(
+        lora
+        for (loras_dict,) in result_loras
+        if loras_dict
+        for lora in loras_dict
+    )
 
-    for (loras_dict,) in result_loras:
-        if not loras_dict:
-            continue
-
-        counter.update(loras_dict.keys())
-
-    loras_sorted = dict(sorted(counter.items(),
-                               key=lambda x: x[1],
-                               reverse=True))
-    results_loras = list(loras_sorted.items())
-
-    # Recuperation du nbr de tags
-    all_tags_dict = db.session.query(Prompt.tags).all()
-
-    all_tags = set(
-        tag.strip().lower()
-        for p in Prompt.query.all()
-        for tag in (p.tags or '').split(',')
-        if tag.strip())
-
-    dict_tags = dict(sorted(
-        Counter(
-            t.strip()
-            for tag in all_tags_dict
-            for p in tag
-            for t in p.split(",")
-        ).items(),
+    results_loras = sorted(
+        counter.items(),
         key=lambda x: x[1],
-        reverse=True))
+        reverse=True
+    )
 
-    results_tags = [(k, v) for k, v in dict_tags.items()]
+    # Recupeartion des Tags
+    all_tags = Counter(
+        tag.strip().lower()
+        for (tags,) in db.session.query(Prompt.tags).all()
+        for tag in (tags or '').split(',')
+        if tag.strip()
+    )
+
+    results_tags = sorted(
+        all_tags.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
 
     # Recuperation de la taille du dossier des images
     taille_upload_folder = taille_path(current_app.config['UPLOAD_FOLDER'])
@@ -456,8 +444,6 @@ def statistiques():
     print(f"Liste des Checkpoints: {results_checkpoints}")
     print(f"Liste des Loras: {results_loras}")
     print(f"Liste des tags: {results_tags}")
-    print(f"all_tags: {all_tags}")
-    print(f"all_tags_dict: {all_tags_dict}")
     print('**************')
 
     return render_template('statistiques.html',
