@@ -1,6 +1,7 @@
 """Liste des fonctions utilitaires de l'application"""
 
 import json
+import hashlib
 from pathlib import Path
 from PIL import Image
 from config import ALLOWED_EXTENSIONS
@@ -445,3 +446,13 @@ def convert_to_webp(path_image):
             quality=90,
             method=6
         )
+
+
+def get_file_hash(file_path):
+    sha256 = hashlib.sha256()
+
+    with open(file_path, "rb") as file:
+        for chunk in iter(lambda: file.read(8192), b""):
+            sha256.update(chunk)
+
+    return sha256.hexdigest()

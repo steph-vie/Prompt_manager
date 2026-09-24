@@ -28,6 +28,8 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     prompt_raw = db.Column(db.JSON, nullable=True)
     sampler = db.Column(db.String(120), nullable=True)
     scheduler = db.Column(db.String(120), nullable=True)
+    image_hash = db.Column(db.String(64), unique=True,
+                           index=True, nullable=True)
 
     # Ajout de la référence à la catégorie
     category_id = db.Column(

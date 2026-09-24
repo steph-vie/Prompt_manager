@@ -35,6 +35,13 @@ def convert_to_webp_all():
             prompt.image_filename = new_image_filename
             db.session.commit()
     if nbr_convert_to_webp == 0:
-        print("Aucun prompt modifié")
+        print("tous les prompts ont des images en Webp")
     else:
         print(f"Modification de {nbr_convert_to_webp} prompts")
+
+
+def run_maintenance_hash():
+    """
+    créé et stocke dans la bdd les hash pour images webp qui n'en ont pas
+    """
+    print("maintenance hash")

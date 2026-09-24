@@ -12,7 +12,7 @@ from sqlalchemy import func
 from models import db, Prompt, Category
 from utils import (
     ComfyUIImage, allowed_file, clean_tags, CategoryService,
-    taille_path)
+    taille_path, get_file_hash)
 from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
@@ -156,43 +156,59 @@ def add():
                   "error")
             return redirect(url_for('.add'))
 
+        # Construction du nom de l'image optimisée
         ext = ".webp"
         filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
         path_filename = os.path.join(current_app.config['UPLOAD_FOLDER'],
                                      filename)
+
         image_upload = ComfyUIImage(image)
 
-        print('*** DEBUG ****')
-        print(f"prompt positif: {image_upload.get_positive_prompt()}")
-        print(f"prompt negatif: {image_upload.get_negative_prompt()}")
-        print(f"checkpoint: {image_upload.get_checkpoint()}")
-        print(f"loras: {image_upload.get_loras()}")
-        print(f"cfg: {image_upload.get_cfg()}")
-        print(f"sampler: {image_upload.get_sampler()}")
-        print(f"scheduler: {image_upload.get_scheduler()}")
-        print(f"seed: {image_upload.get_seed()}")
-        print('**************')
-
         image_upload.optimize_image(path_filename)
+        image_hash = get_file_hash(path_filename)
 
-        new_prompt = Prompt(prompt=image_upload.get_positive_prompt(),
-                            tags=tags_cleaned,
-                            image_filename=filename,
-                            seed=image_upload.get_seed(),
-                            steps=image_upload.get_steps(),
-                            checkpoint=image_upload.get_checkpoint(),
-                            loras=image_upload.get_loras(),
-                            neg_prompt=image_upload.get_negative_prompt(),
-                            cfg=image_upload.get_cfg(),
-                            prompt_raw=image_upload.get_prompt_raw(),
-                            sampler=image_upload.get_sampler(),
-                            scheduler=image_upload.get_scheduler(),
-                            category_id=categorie_id,
-                            )
-        db.session.add(new_prompt)
-        db.session.commit()
-        flash("Prompt ajouté avec succès.", "success")
-        return redirect(url_for('.index'))
+        existing_prompt = Prompt.query.filter_by(
+            image_hash=image_hash
+        ).first()
+
+        if existing_prompt:
+            flash("Le Prompt existe deja dans la base", "error")
+            os.remove(path_filename)
+            return redirect(url_for('.index'))
+        else:
+            print('*** DEBUG ****')
+            print(f"prompt positif: {image_upload.get_positive_prompt()}")
+            print(f"prompt negatif: {image_upload.get_negative_prompt()}")
+            print(f"checkpoint: {image_upload.get_checkpoint()}")
+            print(f"loras: {image_upload.get_loras()}")
+            print(f"cfg: {image_upload.get_cfg()}")
+            print(f"sampler: {image_upload.get_sampler()}")
+            print(f"scheduler: {image_upload.get_scheduler()}")
+            print(f"seed: {image_upload.get_seed()}")
+            print(f"hash: {image_hash}")
+            print('**************')
+
+            # conversion de l'image en webp
+
+            new_prompt = Prompt(prompt=image_upload.get_positive_prompt(),
+                                tags=tags_cleaned,
+                                image_filename=filename,
+                                seed=image_upload.get_seed(),
+                                steps=image_upload.get_steps(),
+                                checkpoint=image_upload.get_checkpoint(),
+                                loras=image_upload.get_loras(),
+                                neg_prompt=image_upload.get_negative_prompt(),
+                                cfg=image_upload.get_cfg(),
+                                prompt_raw=image_upload.get_prompt_raw(),
+                                sampler=image_upload.get_sampler(),
+                                scheduler=image_upload.get_scheduler(),
+                                category_id=categorie_id,
+                                image_hash=image_hash,
+                                )
+            db.session.add(new_prompt)
+            db.session.commit()
+            flash("Prompt ajouté avec succès.", "success")
+            return redirect(url_for('.index'))
 
     return render_template('add.html',
                            liste_categories=category_options,
