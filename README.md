@@ -83,7 +83,8 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
 - **`HOST_PORT`**: port exposé sur ta machine (ex: `5000`)
-- **`DIR_BASE`**: dossier hôte qui contient le dossier `prompt_manager/` utilisé pour les volumes
+- **`DIR_BASE`**: dossier hôte qui contient le dossier `Prompt_manager/` utilisé pour les volumes
+- **`VERSION`**: Possibilité d'avoir plusieurs instances de l'app, donc plusieurs images (latest par défaut)
 
 ## 🔨 Utilitaires
 Il est possible de faire une extraction de la bdd au format json (backup.json)

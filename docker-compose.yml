@@ -3,6 +3,7 @@ services:
   app:
     build: .
     container_name: prompt_manager
+    image: prompt-manager:${VERSION:-latest}
     environment:
       - SECRET_KEY=${SECRET_KEY}
     ports:
