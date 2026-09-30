@@ -3,73 +3,82 @@
 import os
 from pathlib import Path
 from flask import current_app
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import defer
 from models import Prompt, db
-from utils import convert_to_webp,get_file_hash
+from utils import convert_to_webp, get_file_hash
+
+
+def _upload_path(filename):
+    """Chemin absolu d'un fichier du dossier d'upload"""
+    return os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
 
 
 def convert_to_webp_all():
     """
-    Convertion de toutes les images png avec remplacement
-    de l'extension dans la BDD
+    Convertit en WebP les images qui ne le sont pas encore,
+    met à jour la BDD puis supprime l'ancien fichier.
     """
     print("**** Maintenance WebP ****")
-    all_prompts = Prompt.query.all()
-    nbr_convert_to_webp = 0
-    for prompt in all_prompts:
+    prompts = (
+        Prompt.query
+        .filter(Prompt.image_filename.isnot(None),
+                ~Prompt.image_filename.like('%.webp'))
+        .options(defer(Prompt.prompt_raw))
+        .all()
+    )
 
-        ext = os.path.splitext(prompt.image_filename)[1]
-        if ext != ".webp":
+    converted = 0
 
-            path_image_filename_ab = os.path.join(
-                current_app.config['UPLOAD_FOLDER'],
-                prompt.image_filename)
-            print(f"Modification de :{prompt.image_filename}")
+    for prompt in prompts:
 
-            # Convertion en WEBP
-            convert_to_webp(path_image_filename_ab)
-            nbr_convert_to_webp = nbr_convert_to_webp + 1
+        source = _upload_path(prompt.image_filename)
+        if not os.path.exists(source):
+            print(f"Fichier introuvable, ignoré : {prompt.image_filename}")
+            continue
+        try:
+            convert_to_webp(source)
+        except OSError as err:
+            print(f"Échec de conversion de {prompt.image_filename} : {err}")
+            continue
 
-            # Enregistrement du nouveau nom
-            new_image_filename = str(Path(
-                                    prompt.image_filename)
-                                    .with_suffix(".webp"))
-            prompt.image_filename = new_image_filename
-            db.session.commit()
-    if nbr_convert_to_webp == 0:
-        print("Tous les prompts ont des images en Webp")
-    else:
-        print(f"Modification de {nbr_convert_to_webp} prompts")
+        prompt.image_filename = str(
+            Path(prompt.image_filename).with_suffix(".webp"))
+        prompt.image_hash = None  # sera recalculé sur le fichier WebP
+        db.session.commit()
+        os.remove(source)
+        converted += 1
+
+    print(f"{converted} image(s) converties" if converted
+          else "Toutes les images sont en WebP")
 
 
 def run_maintenance_hash():
-    """
-    créé et stocke dans la bdd les hash pour images webp qui n'en ont pas
-    """
+    """Calcule et stocke le hash des images qui n'en ont pas."""
     print("**** Maintenance hash ****")
-    nbr_hash = 0
-    nbr_no_hash = 0
-    all_prompts = Prompt.query.all()
-    for prompt in all_prompts:
-        if prompt.image_hash:
-            nbr_hash = nbr_hash + 1
-        else:
-            nbr_no_hash = nbr_no_hash + 1
-            path_image_filename_ab = os.path.join(
-                current_app.config['UPLOAD_FOLDER'],
-                prompt.image_filename)
-            print(f"Obtention du hash pour {prompt.id}")
+    prompts = (
+        Prompt.query
+        .filter(Prompt.image_filename.isnot(None),
+                Prompt.image_hash.is_(None))
+        .options(defer(Prompt.prompt_raw))
+        .all()
+    )
 
-            # Obtention du hash
-            new_hash = get_file_hash(path_image_filename_ab)
-            print(f"Nouveau hash: {new_hash}")
+    done = 0
+    for prompt in prompts:
+        path = _upload_path(prompt.image_filename)
+        if not os.path.exists(path):
+            print(f"Fichier introuvable, ignoré : {prompt.image_filename}")
+            continue
 
-            # Sauvegarde du hash dans la bdd
-            prompt.image_hash = new_hash
+        prompt.image_hash = get_file_hash(path)
+        try:
             db.session.commit()
+            done += 1
+        except IntegrityError:
+            db.session.rollback()
+            print(f"Doublon détecté pour le prompt {prompt.id}, "
+                  "hash non enregistré")
 
-    if nbr_no_hash == 0:
-        print(f"Tous les prompts ont un hash")
-    else:
-        print(f"{nbr_no_hash} hash obtenus")
-
-    print(f"{nbr_hash} hash dans la base")
+    total = Prompt.query.filter(Prompt.image_hash.isnot(None)).count()
+    print(f"{done} hash calculés, {total} hash dans la base")

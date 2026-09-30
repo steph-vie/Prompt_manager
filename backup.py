@@ -15,7 +15,7 @@ def export_backup(filepath="backup.json"):
 
     data = {
         "exported_at": datetime.utcnow().isoformat(),
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "application_version": __version__,
         "categories": [
             {
@@ -36,6 +36,10 @@ def export_backup(filepath="backup.json"):
                 "steps": p.steps,
                 "checkpoint": p.checkpoint,
                 "loras": p.loras,
+                "cfg": p.cfg,
+                "sampler": p.sampler,
+                "scheduler": p.scheduler,
+                "hash": p.image_hash,
                 "neg_prompt": p.neg_prompt,
                 "category_id": p.category_id,
                 "image_filename": p.image_filename,
@@ -48,7 +52,10 @@ def export_backup(filepath="backup.json"):
     }
 
     with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+        try:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+        except (ValueError, TypeError):
+            print("Pb de creation du json")
 
 
 def restore_backup(filepath="backup.json"):
@@ -58,7 +65,13 @@ def restore_backup(filepath="backup.json"):
     from datetime import datetime
 
     with open(filepath, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            raise ValueError(
+                "❌ Impossible de décoder le fichier JSON"
+            )
+            exit()
 
     Prompt.query.delete()
     Category.query.delete()
@@ -82,6 +95,10 @@ def restore_backup(filepath="backup.json"):
             prompt=p["prompt"],
             tags=p["tags"],
             seed=p["seed"],
+            cfg=p["cfg"],
+            sampler=p["sampler"],
+            scheduler=p["scheduler"],
+            image_hash=p["hash"],
             steps=p["steps"],
             checkpoint=p["checkpoint"],
             loras=p["loras"],

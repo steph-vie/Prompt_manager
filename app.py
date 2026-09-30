@@ -3,6 +3,7 @@
 import os
 import click
 from flask import Flask
+from flask_wtf import CSRFProtect
 from flask_migrate import Migrate, upgrade
 from flask.cli import with_appcontext
 from config import Config
@@ -10,6 +11,11 @@ from models import db
 from routes import register_routes
 from backup import export_backup, restore_backup
 from maintenance import run_maintenance_hash, convert_to_webp_all
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+MIGRATIONS_DIR = os.path.join(BASE_DIR, "migrations")
+
+csrf = CSRFProtect()
 
 
 def create_app():
@@ -19,6 +25,11 @@ def create_app():
     app = Flask(__name__)
     migrate = Migrate()
     app.config.from_object(Config)
+    csrf.init_app(app)
+
+    if app.config['SECRET_KEY'] == "dev-insecure-change-me":
+        print("ATTENTION : SECRET_KEY par défaut utilisée, "
+              "à définir en production.")
 
     # Création du dossier d'upload
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -28,10 +39,11 @@ def create_app():
         os.makedirs(app.config['DB_FOLDER'])
 
     db.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app, db, directory=MIGRATIONS_DIR)
     register_routes(app)
+    app.logger.setLevel("DEBUG")
 
-    if os.path.exists("migrations"):
+    if os.path.exists(MIGRATIONS_DIR):
         with app.app_context():
             upgrade()
 
@@ -51,7 +63,10 @@ def create_app():
         restore_backup(input)
         click.echo(f"Base restaurée depuis : {input}")
 
-    with app.app_context():
+    @app.cli.command("maintenance")
+    @with_appcontext
+    def maintenance_command():
+        """Conversion WebP + calcul des hash manquants."""
         convert_to_webp_all()
         run_maintenance_hash()
 

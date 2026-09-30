@@ -19,7 +19,7 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     tags = db.Column(db.String(120), nullable=True)
 
     # Métadonnées techniques
-    seed = db.Column(db.Integer, nullable=True)
+    seed = db.Column(db.String(32), nullable=True)
     steps = db.Column(db.Integer, nullable=True)
     checkpoint = db.Column(db.Text, nullable=True)
     cfg = db.Column(db.Float, nullable=True)

@@ -19,5 +19,6 @@
   </div>
   <button type="submit" class="btn btn-success">Enregistrer</button>
   <a href="{{ url_for('prompt.index') }}" class="btn btn-danger">Annuler</a>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 </form>
 {% endblock %}
