@@ -7,4 +7,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["flask", "run", "--host=0.0.0.0"]
+ENV PYTHONUNBUFFERED=1
+CMD ["sh", "-c", "flask maintenance && flask run --host=0.0.0.0"]

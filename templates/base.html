@@ -1,7 +1,7 @@
 <!doctype html>
 {% from 'macros.html' import render_category_tree %}
 {% from 'macros.html' import render_manage_tree %}
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,7 +28,7 @@
                     <i class="fas fa-folder"></i> Catégories
                 </a>
                 <a class="nav-link" href="{{ url_for('prompt.statistiques') }}">
-                    <i class="fa fa-bar-chart"></i> Statistiques
+                    <i class="fas fa-bar-chart"></i> Statistiques
                 </a>
             </div>
         </div>
@@ -65,7 +65,9 @@
                         <i class="fa fa-tags"></i> Tags
                     </h6>
 
-                    <form method="get" class="d-flex flex-wrap gap-2">
+                    <form method="get"
+                            action="{% if selected_category %}{{ url_for('prompt.index', category_id=selected_category.id) }}{% else %}{{ url_for('prompt.index') }}{% endif %}"
+                            class="d-flex flex-wrap gap-2">
                         {% for tag_option in tags %}
                             <button type="submit"
                                     name="tag"

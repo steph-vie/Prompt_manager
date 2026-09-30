@@ -7,15 +7,55 @@ from flask import (
     Blueprint, render_template, request, redirect,
     url_for, flash, current_app, jsonify
 )
-from werkzeug.utils import secure_filename
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import defer
+from config import IMPORT_EXTENSIONS
 from models import db, Prompt, Category
 from utils import (
     ComfyUIImage, allowed_file, clean_tags, CategoryService,
-    taille_path, get_file_hash)
+    taille_path, get_file_hash, save_webp)
 from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
+
+
+def get_sidebar_data():
+    """Données communes du panneau Filtres (catégories + tags)."""
+    category_prompt_counts = dict(
+        db.session.query(Prompt.category_id, func.count(Prompt.id))
+        .filter(Prompt.category_id.isnot(None))
+        .group_by(Prompt.category_id)
+        .all()
+    )
+    category_children_counts = dict(
+        db.session.query(Category.parent_id, func.count(Category.id))
+        .filter(Category.parent_id.isnot(None))
+        .group_by(Category.parent_id)
+        .all()
+    )
+    # On ne charge que la colonne tags, pas les objets complets
+    all_tags = {
+        tag.strip().lower()
+        for (tags,) in db.session.query(Prompt.tags)
+        for tag in (tags or '').split(',')
+        if tag.strip()
+    }
+    return {
+        "category_prompt_counts": category_prompt_counts,
+        "category_children_counts": category_children_counts,
+        "tags": sorted(all_tags),
+    }
+
+
+@prompt_bp.app_context_processor
+def inject_sidebar():
+    """Rend disponibles dans tous les templates les variables de base.html."""
+    return {
+        "app_version": __version__,
+        "category_tree": CategoryService.get_tree(),
+        **get_sidebar_data(),
+    }
 
 
 @prompt_bp.route('/')
@@ -56,46 +96,20 @@ def index(category_id=None):
             | (Prompt.neg_prompt.contains(query))
         )
 
-    pagination = prompts_query.order_by(
-        Prompt.id.desc()).paginate(page=page,
-                                   per_page=current_app.config['IMG_PER_PAGE'])
-    prompts = pagination.items
-
-    all_tags = set(
-        tag.strip().lower()
-        for p in Prompt.query.all()
-        for tag in (p.tags or '').split(',')
-        if tag.strip()
-    )
-    # Récupérer l'arbre des catégories pour la sidebar
-    category_tree = CategoryService.get_tree()
-
-    # Pré-calculer des compteurs pour éviter les .count()
-    # en cascade dans le template
-    category_prompt_counts = dict(
-        db.session.query(Prompt.category_id, func.count(Prompt.id))
-        .filter(Prompt.category_id.isnot(None))
-        .group_by(Prompt.category_id)
-        .all()
-    )
-    category_children_counts = dict(
-        db.session.query(Category.parent_id, func.count(Category.id))
-        .filter(Category.parent_id.isnot(None))
-        .group_by(Category.parent_id)
-        .all()
+    # prompt_raw (workflow complet) est inutile sur la grille
+    pagination = (
+        prompts_query
+        .options(defer(Prompt.prompt_raw))
+        .order_by(Prompt.id.desc())
+        .paginate(page=page, per_page=current_app.config['IMG_PER_PAGE'])
     )
 
     return render_template('index.html',
-                           prompts=prompts,
-                           tags=sorted(all_tags),
+                           prompts=pagination.items,
                            selected_tag=tag,
                            query=query or '',
                            pagination=pagination,
-                           category_tree=category_tree,
-                           category_prompt_counts=category_prompt_counts,
-                           category_children_counts=category_children_counts,
-                           selected_category=selected_category,
-                           app_version=__version__)
+                           selected_category=selected_category)
 
 
 @prompt_bp.route('/prompt/<int:prompt_id>')
@@ -106,109 +120,91 @@ def view(prompt_id):
     :param prompt_id: ID du prompt à afficher
     """
 
-    prompt = Prompt.query.get_or_404(prompt_id)
-    category_tree = CategoryService.get_tree()
-    category_prompt_counts = dict(
-        db.session.query(Prompt.category_id, func.count(Prompt.id))
-        .filter(Prompt.category_id.isnot(None))
-        .group_by(Prompt.category_id)
-        .all()
-    )
-    category_children_counts = dict(
-        db.session.query(Category.parent_id, func.count(Category.id))
-        .filter(Category.parent_id.isnot(None))
-        .group_by(Category.parent_id)
-        .all()
-    )
-    all_tags = set(
-        tag.strip().lower()
-        for p in Prompt.query.all()
-        for tag in (p.tags or '').split(',')
-        if tag.strip()
-    )
-    return render_template('view.html',
-                           prompt=prompt,
-                           category_tree=category_tree,
-                           category_prompt_counts=category_prompt_counts,
-                           category_children_counts=category_children_counts,
-                           tags=sorted(all_tags),
-                           app_version=__version__)
+    prompt = db.get_or_404(Prompt, prompt_id)
+    return render_template('view.html', prompt=prompt)
 
 
 @prompt_bp.route('/add', methods=['GET', 'POST'])
 def add():
 
     """
-    Ajoute un nouveau prompt à la base de données.
-    Accepte un formulaire avec un titre, un prompt, des tags et une image.
+    Ajoute un nouveau prompt à partir d'une image ComfyUI (PNG)
     """
     category_options = CategoryService.get_category_options()
+
     if request.method == 'POST':
-        tags = request.form['tags']
-        categorie_id = request.form.get('categorie') or None
-        tags_cleaned = clean_tags(tags)
+        tags_cleaned = clean_tags(request.form.get('tags', ''))
+        categorie_id = request.form.get('categorie', type=int)
         image = request.files.get('image')
         filename = None
 
         # L'extraction de métadonnées repose sur l'image source.
-        if not image or not image.filename or not allowed_file(image.filename):
-            flash("Une image valide est obligatoire pour créer un prompt.",
-                  "error")
+        if (not image or not image.filename
+                or not allowed_file(image.filename, IMPORT_EXTENSIONS)):
+            flash("Une image PNG générée par ComfyUI est obligatoire "
+                  "pour créer un prompt.", "error")
+            return redirect(url_for('.add'))
+
+        # Lecture des métadonnées, avant toute écriture sur le disque
+        try:
+            comfy = ComfyUIImage(image)
+            positive_prompt = comfy.get_positive_prompt()
+        except ValueError as err:
+            flash(f"Import impossible : {err}", "error")
+            return redirect(url_for('.add'))
+        except OSError:
+            flash("Fichier image illisible.", "error")
             return redirect(url_for('.add'))
 
         # Construction du nom de l'image optimisée
-        ext = ".webp"
-        filename = secure_filename(f"{uuid.uuid4().hex}{ext}")
+        filename = f"{uuid.uuid4().hex}.webp"
         path_filename = os.path.join(current_app.config['UPLOAD_FOLDER'],
                                      filename)
 
-        image_upload = ComfyUIImage(image)
+        try:
+            comfy.optimize_image(path_filename)
+            image_hash = get_file_hash(path_filename)
 
-        image_upload.optimize_image(path_filename)
-        image_hash = get_file_hash(path_filename)
+            if Prompt.query.filter_by(image_hash=image_hash).first():
+                os.remove(path_filename)
+                flash("Le prompt existe déjà dans la base", "error")
+                return redirect(url_for('.index'))
 
-        existing_prompt = Prompt.query.filter_by(
-            image_hash=image_hash
-        ).first()
+            else:
+                # conversion de l'image en webp
 
-        if existing_prompt:
-            flash("Le Prompt existe deja dans la base", "error")
-            os.remove(path_filename)
-            return redirect(url_for('.index'))
-        else:
-            print('*** DEBUG ****')
-            print(f"prompt positif: {image_upload.get_positive_prompt()}")
-            print(f"prompt negatif: {image_upload.get_negative_prompt()}")
-            print(f"checkpoint: {image_upload.get_checkpoint()}")
-            print(f"loras: {image_upload.get_loras()}")
-            print(f"cfg: {image_upload.get_cfg()}")
-            print(f"sampler: {image_upload.get_sampler()}")
-            print(f"scheduler: {image_upload.get_scheduler()}")
-            print(f"seed: {image_upload.get_seed()}")
-            print(f"hash: {image_hash}")
-            print('**************')
+                new_prompt = Prompt(
+                    prompt=positive_prompt,
+                    tags=tags_cleaned,
+                    image_filename=filename,
+                    seed=comfy.get_seed(),
+                    steps=comfy.get_steps(),
+                    checkpoint=comfy.get_checkpoint(),
+                    loras=comfy.get_loras(),
+                    neg_prompt=comfy.get_negative_prompt(),
+                    cfg=comfy.get_cfg(),
+                    prompt_raw=comfy.get_prompt_raw(),
+                    sampler=comfy.get_sampler(),
+                    scheduler=comfy.get_scheduler(),
+                    category_id=categorie_id,
+                    image_hash=image_hash,
+                )
+                db.session.add(new_prompt)
+                db.session.commit()
 
-            # conversion de l'image en webp
+        except (OSError, ValueError, SQLAlchemyError):
+            db.session.rollback()
+            if os.path.exists(path_filename):
+                os.remove(path_filename)
+            current_app.logger.exception("Échec de l'ajout d'un prompt")
+            flash("Erreur lors de l'ajout du prompt.", "error")
+            return redirect(url_for('.add'))
 
-            new_prompt = Prompt(prompt=image_upload.get_positive_prompt(),
-                                tags=tags_cleaned,
-                                image_filename=filename,
-                                seed=image_upload.get_seed(),
-                                steps=image_upload.get_steps(),
-                                checkpoint=image_upload.get_checkpoint(),
-                                loras=image_upload.get_loras(),
-                                neg_prompt=image_upload.get_negative_prompt(),
-                                cfg=image_upload.get_cfg(),
-                                prompt_raw=image_upload.get_prompt_raw(),
-                                sampler=image_upload.get_sampler(),
-                                scheduler=image_upload.get_scheduler(),
-                                category_id=categorie_id,
-                                image_hash=image_hash,
-                                )
-            db.session.add(new_prompt)
-            db.session.commit()
-            flash("Prompt ajouté avec succès.", "success")
-            return redirect(url_for('.index'))
+        current_app.logger.debug("Prompt %s ajouté (hash %s)",
+                                 new_prompt.id, image_hash)
+
+        flash("Prompt ajouté avec succès.", "success")
+        return redirect(url_for('.index'))
 
     return render_template('add.html',
                            liste_categories=category_options,
@@ -219,25 +215,58 @@ def add():
 def edit(prompt_id):
 
     """
-    Modifie un prompt existant.
-    Permet de changer le titre, le contenu, les tags et l’image.
+    Modifie un prompt existant (catégorie, tags, image).
     :param prompt_id: ID du prompt à modifier
     """
 
-    prompt = Prompt.query.get_or_404(prompt_id)
+    prompt = db.get_or_404(Prompt, prompt_id)
     category_options = CategoryService.get_category_options()
-    if request.method == 'POST':
-        prompt.tags = clean_tags(request.form['tags'])
-        prompt.category_id = request.form['categorie']
 
-        image = request.files['image']
-        if image and allowed_file(image.filename):
-            filename = secure_filename(image.filename)
-            image.save(os.path.join(current_app.config['UPLOAD_FOLDER'],
-                                    filename))
-            prompt.image_filename = filename
+    if request.method == 'POST':
+        prompt.tags = clean_tags(request.form.get('tags', ''))
+        prompt.category_id = request.form.get('categorie') or None
+
+        image = request.files.get('image')
+        old_filename = None
+
+        if image and image.filename:
+            if not allowed_file(image.filename):
+                flash("Format d'image non autorisé.", "error")
+                return redirect(request.url)
+
+            new_filename = f"{uuid.uuid4().hex}.webp"
+            new_path = os.path.join(current_app.config['UPLOAD_FOLDER'],
+                                    new_filename)
+            try:
+                save_webp(image, new_path)
+            except (OSError, ValueError):
+                flash("Image invalide.", "error")
+                return redirect(request.url)
+
+            new_hash = get_file_hash(new_path)
+            duplicate = Prompt.query.filter(
+                Prompt.image_hash == new_hash,
+                Prompt.id != prompt.id
+            ).first()
+            if duplicate:
+                os.remove(new_path)
+                flash("Cette image existe déjà dans la base.", "error")
+                return redirect(request.url)
+
+            old_filename = prompt.image_filename
+            prompt.image_filename = new_filename
+            prompt.image_hash = new_hash
 
         db.session.commit()
+
+        # Suppression de l'ancienne image seulement après le commit
+        if old_filename:
+            try:
+                os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'],
+                                       old_filename))
+            except FileNotFoundError:
+                pass
+
         flash("Prompt modifié.", "success")
         return redirect(url_for('.view', prompt_id=prompt.id))
 
@@ -271,9 +300,9 @@ def delete(prompt_id):
 def new_category():
     """Ajout d'une catégrorie"""
     if request.method == 'POST':
-        name = request.form.get('name')
+        name = request.form.get('name', '').strip()
         description = request.form.get('description', '')
-        parent_id = request.form.get('parent_id') or None
+        parent_id = request.form.get('parent_id', type=int)
 
         if not name:
             flash('Le nom de la catégorie est requis', 'error')
@@ -305,22 +334,28 @@ def edit_category(category_id):
     category = Category.query.get_or_404(category_id)
 
     if request.method == 'POST':
-        category.name = request.form.get('name')
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Le nom de la catégorie est requis', 'error')
+            return redirect(request.url)
+
+        category.name = name
         category.description = request.form.get('description', '')
-        new_parent_id = request.form.get('parent_id') or None
+
+        # None si "Aucune catégorie" ou valeur invalide
+        new_parent_id = request.form.get('parent_id', type=int)
 
         # Vérifier si le changement de parent est valide
-        if new_parent_id and int(new_parent_id) != category.parent_id:
+        if new_parent_id != category.parent_id:
             try:
                 CategoryService.move_category(category.id, new_parent_id)
-                flash('Catégorie mise à jour avec succès!', 'success')
-            except ValueError as e:
-                flash(str(e), 'error')
+            except ValueError as err:
+                db.session.rollback()
+                flash(str(err), 'error')
                 return redirect(request.url)
-        else:
-            db.session.commit()
-            flash('Catégorie mise à jour avec succès!', 'success')
 
+        db.session.commit()
+        flash('Catégorie mise à jour avec succès!', 'success')
         return redirect(url_for('prompt.manage_categories'))
 
     # Exclure la catégorie elle-même et ses descendants des options parent
@@ -354,8 +389,8 @@ def delete_category(category_id):
 
     if prompts_count > 0 or children_count > 0:
         flash(
-            f'Impossible de supprimer "{category.name}": elle contient ' |
-            '{prompts_count} prompt(s) et {children_count} sous-catégorie(s)',
+            f'Impossible de supprimer "{category.name}": elle contient '
+            f'{prompts_count} prompt(s) et {children_count} sous-catégorie(s)',
             'error')
         return redirect(url_for('prompt.manage_categories'))
 
@@ -370,13 +405,7 @@ def delete_category(category_id):
 @prompt_bp.route('/categories')
 def manage_categories():
     """Gestion des catégories"""
-    category_tree = CategoryService.get_tree()
-    return render_template('manage_categories.html',
-                           category_tree=category_tree,
-                           category_prompt_counts={},
-                           category_children_counts={},
-                           tags=[],
-                           app_version=__version__)
+    return render_template('manage_categories.html')
 
 
 # API pour l'arbre des catégories (pour JavaScript)
@@ -402,6 +431,7 @@ def statistiques():
             Prompt.checkpoint,
             func.count(Prompt.checkpoint).label("count"),
         )
+        .filter(Prompt.checkpoint.isnot(None))
         .group_by(Prompt.checkpoint)
         .order_by(func.count(Prompt.checkpoint).desc())
         .all()
@@ -441,36 +471,14 @@ def statistiques():
     # Recuperation de la taille de la bdd
     taille_bdd = taille_path(current_app.config['DB_PATH'])
 
-    # Récupérer les infos des catégories et tags pour la sidebar
-    category_tree = CategoryService.get_tree()
-    category_prompt_counts = dict(
-            db.session.query(Prompt.category_id, func.count(Prompt.id))
-            .filter(Prompt.category_id.isnot(None))
-            .group_by(Prompt.category_id)
-            .all()
-        )
-    category_children_counts = dict(
-            db.session.query(Category.parent_id, func.count(Category.id))
-            .filter(Category.parent_id.isnot(None))
-            .group_by(Category.parent_id)
-            .all()
-        )
-
-    print('*** DEBUG ****')
-    print(f"Liste des Checkpoints: {results_checkpoints}")
-    print(f"Liste des Loras: {results_loras}")
-    print(f"Liste des tags: {results_tags}")
-    print('**************')
+    current_app.logger.debug(
+        "Stats : %d checkpoints, %d loras, %d tags",
+        len(results_checkpoints), len(results_loras), len(results_tags))
 
     return render_template('statistiques.html',
                            nbr_prompts=nbr_prompts,
                            list_checkpoints=results_checkpoints,
                            loras=results_loras,
                            list_tags=results_tags,
-                           category_tree=category_tree,
-                           category_prompt_counts=category_prompt_counts,
-                           category_children_counts=category_children_counts,
-                           tags=sorted(all_tags),
                            taille_bdd=taille_bdd,
-                           taille_upload_folder=taille_upload_folder,
-                           app_version=__version__)
+                           taille_upload_folder=taille_upload_folder)
