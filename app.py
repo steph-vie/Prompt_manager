@@ -27,6 +27,15 @@ def create_app():
     app = Flask(__name__)
     migrate = Migrate()
     app.config.from_object(Config)
+
+    db.init_app(app)
+    migrate.init_app(app, db, directory=MIGRATIONS_DIR)
+    register_routes(app)
+
+    if os.path.exists(MIGRATIONS_DIR):
+        with app.app_context():
+            upgrade()
+
     # Logs sur stdout (visibles via `docker logs`)
     logging.basicConfig(
         level=logging.INFO,
@@ -49,14 +58,6 @@ def create_app():
 
     if not os.path.exists(app.config['DB_FOLDER']):
         os.makedirs(app.config['DB_FOLDER'])
-
-    db.init_app(app)
-    migrate.init_app(app, db, directory=MIGRATIONS_DIR)
-    register_routes(app)
-
-    if os.path.exists(MIGRATIONS_DIR):
-        with app.app_context():
-            upgrade()
 
     @app.cli.command("backup")
     @click.option("--output", default="backup.json", help="Fichier de sortie")
