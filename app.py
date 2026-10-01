@@ -60,20 +60,23 @@ def create_app():
         os.makedirs(app.config['DB_FOLDER'])
 
     @app.cli.command("backup")
-    @click.option("--output", default="backup.json", help="Fichier de sortie")
+    @click.option("--output", default="backup.json",
+                  help="Fichier de sortie (.json : base seule, "
+                       ".zip : base + images)")
     @with_appcontext
     def backup_command(output):
-        """Export complet de la base en JSON."""
+        """Export complet de la base (et des images si .zip)."""
         export_backup(output)
         click.echo(f"Backup créé : {output}")
 
     @app.cli.command("restore")
-    @click.option("--input", default="backup.json", help="Fichier à restaurer")
+    @click.option("--input", "input_file", default="backup.json",
+                  help="Fichier à restaurer (.json ou .zip)")
     @with_appcontext
-    def restore_command(input):
-        """Restauration complète depuis un JSON."""
-        restore_backup(input)
-        click.echo(f"Base restaurée depuis : {input}")
+    def restore_command(input_file):
+        """Restauration complète depuis un .json ou un .zip."""
+        restore_backup(input_file)
+        click.echo(f"Base restaurée depuis : {input_file}")
 
     @app.cli.command("maintenance")
     @with_appcontext
@@ -88,5 +91,5 @@ def create_app():
 if __name__ == '__main__':
     # Creation de l'app
     appli = create_app()
-    # Lance l’application Flask en mode debug
-    appli.run(debug=True)
+    # Mode debug uniquement si demandé : FLASK_DEBUG=1 python app.py
+    appli.run(debug=os.environ.get("FLASK_DEBUG") == "1")

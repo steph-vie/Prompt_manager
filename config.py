@@ -1,4 +1,4 @@
-''' Definition de la configuration générale de l'application'''
+"""Configuration générale de l'application"""
 import os
 
 
@@ -15,7 +15,7 @@ IMPORT_EXTENSIONS = {'png'}
 
 class Config:  # pylint: disable=too-few-public-methods
     """
-    Definition des valeurs
+    Valeurs de configuration
     """
     SECRET_KEY = os.environ.get("SECRET_KEY") or "dev-insecure-change-me"
     MAX_CONTENT_LENGTH = 20 * 1024 * 1024  # 20 Mo par upload

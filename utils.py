@@ -9,7 +9,7 @@ from models import db, Category
 
 
 class ComfyUIImage:
-    """Fonction globale représentant l'image uploadée"""
+    """Représente une image ComfyUI et les métadonnées de son workflow"""
 
     def __init__(self, image_path):
         self.image_path = image_path
@@ -86,7 +86,7 @@ class ComfyUIImage:
         return None
 
     def get_input(self, node, key, default=None):
-        """Retourne la valeur dans imputs pour la clée donnée"""
+        """Retourne la valeur de inputs pour la clé donnée"""
         if not node:
             return default
         return node.get("inputs", {}).get(key, default)
@@ -446,6 +446,7 @@ def convert_to_webp(path_image):
 
 
 def get_file_hash(file_path):
+    """Retourne le hash SHA-256 d'un fichier"""
     sha256 = hashlib.sha256()
 
     with open(file_path, "rb") as file:

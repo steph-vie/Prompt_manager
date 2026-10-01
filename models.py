@@ -1,16 +1,20 @@
 """Definition des modeles presents dans l'application"""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
 
+def utcnow():
+    """Date/heure UTC sans fuseau (compatible avec les données existantes)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 class Prompt(db.Model):  # pylint: disable=too-few-public-methods
     """
-    Modèle représentant un prompt dans la base de données.
-    Contient un titre, le texte du prompt, des tags, un fichier image associé
-    et une date de création.
+    Modèle représentant un prompt : prompt positif et négatif, paramètres de génération
+    (seed, steps, cfg, sampler, scheduler, checkpoint, LoRAs),
+    tags, catégorie, image associée et son hash.
     """
     __tablename__ = "prompts"
 
@@ -40,19 +44,17 @@ class Prompt(db.Model):  # pylint: disable=too-few-public-methods
 
     # Image et timestamps
     image_filename = db.Column(db.String(120), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
     updated_at = db.Column(db.DateTime,
-                           default=datetime.utcnow,
-                           onupdate=datetime.utcnow)
+                           default=utcnow,
+                           onupdate = utcnow)
 
     def __repr__(self):
         return f"<Prompt {self.id}>"
 
 
 class Category(db.Model):
-    """
-    Modele repesentant une categorie pour un prompt
-    """
+    """Modèle représentant une catégorie (arborescente) de prompts"""
     __tablename__ = "categories"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -66,7 +68,7 @@ class Category(db.Model):
         nullable=True
     )
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     # Relation récursive explicite
     children = db.relationship(
