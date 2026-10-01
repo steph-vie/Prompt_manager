@@ -5,6 +5,7 @@ services:
     image: prompt-manager:${VERSION:-latest}
     environment:
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY requise dans .env}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     ports:
       - ${HOST_PORT:-5000}:5000
     volumes:

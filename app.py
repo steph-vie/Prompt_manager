@@ -25,6 +25,7 @@ def create_app():
     app = Flask(__name__)
     migrate = Migrate()
     app.config.from_object(Config)
+    app.logger.setLevel(app.config["LOG_LEVEL"])
     csrf.init_app(app)
 
     if app.config['SECRET_KEY'] == "dev-insecure-change-me":
@@ -41,7 +42,6 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db, directory=MIGRATIONS_DIR)
     register_routes(app)
-    app.logger.setLevel("DEBUG")
 
     if os.path.exists(MIGRATIONS_DIR):
         with app.app_context():
