@@ -8,7 +8,7 @@ from flask import (
     Blueprint, render_template, request, redirect,
     url_for, flash, current_app, jsonify
 )
-from sqlalchemy import func
+from sqlalchemy import Text, cast, func, literal, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import defer
 from config import IMPORT_EXTENSIONS
@@ -20,6 +20,11 @@ from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
 logger = logging.getLogger("prompt_manager.routes")
+
+def tag_filter(tag):
+    """Filtre sur un tag exact (et non sur une simple sous-chaîne)."""
+    tags_wrapped = literal(",") + Prompt.tags + literal(",")
+    return tags_wrapped.contains(f",{tag.strip().lower()},", autoescape=True)
 
 
 def get_sidebar_data():
@@ -89,13 +94,13 @@ def index(category_id=None):
             in_(category_ids)))
 
     if tag:
-        prompts_query = prompts_query.filter(Prompt.tags.like(f'%{tag}%'))
+        prompts_query = prompts_query.filter(tag_filter(tag))
     if query:
         prompts_query = prompts_query.filter(
-            (Prompt.prompt.contains(query))
-            | (Prompt.checkpoint.contains(query))
-            | (Prompt.loras.contains(query))
-            | (Prompt.neg_prompt.contains(query))
+            Prompt.prompt.contains(query, autoescape=True)
+            | Prompt.checkpoint.contains(query, autoescape=True)
+            | cast(Prompt.loras, Text).contains(query, autoescape=True)
+            | Prompt.neg_prompt.contains(query, autoescape=True)
         )
 
     # prompt_raw (workflow complet) est inutile sur la grille
@@ -283,7 +288,7 @@ def delete(prompt_id):
     :param prompt_id: ID du prompt à supprimer
     """
 
-    prompt = Prompt.query.get_or_404(prompt_id)
+    prompt = db.get_or_404(Prompt, prompt_id)
     if prompt.image_filename:
         try:
             os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'],
@@ -299,7 +304,7 @@ def delete(prompt_id):
 # Route pour créer une nouvelle catégorie
 @prompt_bp.route('/categories/new', methods=['GET', 'POST'])
 def new_category():
-    """Ajout d'une catégrorie"""
+    """Ajoute une catégorie"""
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         description = request.form.get('description', '')
@@ -331,8 +336,8 @@ def new_category():
 # Route pour éditer une catégorie
 @prompt_bp.route('/categories/<int:category_id>/edit', methods=['GET', 'POST'])
 def edit_category(category_id):
-    """Edite un catégorie"""
-    category = Category.query.get_or_404(category_id)
+    """Modifie une catégorie"""
+    category = db.get_or_404(Category, category_id)
 
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
@@ -382,7 +387,7 @@ def edit_category(category_id):
 @prompt_bp.route('/categories/<int:category_id>/delete', methods=['POST'])
 def delete_category(category_id):
     """Supprime une catégorie"""
-    category = Category.query.get_or_404(category_id)
+    category = db.get_or_404(Category, category_id)
 
     # Vérifier s'il y a des prompts ou des sous-catégories
     prompts_count = category.prompts.count()
@@ -419,12 +424,10 @@ def api_categories_tree():
 
 # -----------------------------------------------------------------------------------
 
-
 @prompt_bp.route('/statistiques')
 def statistiques():
-    """Génére toutes les elements pour le panneau des statistiques"""
-
-    # Recuperation des checkpoints
+    """Génère les données du panneau des statistiques"""
+    # Récupération des checkpoints
     nbr_prompts = Prompt.query.count()
 
     results_checkpoints = (
@@ -453,7 +456,7 @@ def statistiques():
         reverse=True
     )
 
-    # Recupeartion des Tags
+    # Récupération des tags
     all_tags = Counter(
         tag.strip().lower()
         for (tags,) in db.session.query(Prompt.tags).all()
@@ -467,7 +470,7 @@ def statistiques():
         reverse=True
     )
 
-    # Recuperation de la taille du dossier des images
+    # Récupération de la taille du dossier des images
     taille_upload_folder = taille_path(current_app.config['UPLOAD_FOLDER'])
     # Recuperation de la taille de la bdd
     taille_bdd = taille_path(current_app.config['DB_PATH'])
@@ -483,3 +486,11 @@ def statistiques():
                            list_tags=results_tags,
                            taille_bdd=taille_bdd,
                            taille_upload_folder=taille_upload_folder)
+
+# -----------------------------------------------------------------------------------
+
+@prompt_bp.route('/health')
+def health():
+    """Point de contrôle utilisé par le HEALTHCHECK Docker."""
+    db.session.execute(text("SELECT 1"))
+    return jsonify(status="ok")
