@@ -2,6 +2,8 @@
 
 import os
 import click
+import logging
+import sys
 from flask import Flask
 from flask_wtf import CSRFProtect
 from flask_migrate import Migrate, upgrade
@@ -25,6 +27,13 @@ def create_app():
     app = Flask(__name__)
     migrate = Migrate()
     app.config.from_object(Config)
+    # Logs sur stdout (visibles via `docker logs`)
+    logging.basicConfig(
+        level=logging.INFO,
+        stream=sys.stdout,
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    )
+    # Niveau voulu uniquement pour les logs de l'application
     app.logger.setLevel(app.config["LOG_LEVEL"])
     csrf.init_app(app)
 
