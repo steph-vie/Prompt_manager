@@ -2,6 +2,7 @@
 
 import os
 import uuid
+import logging
 from collections import Counter
 from flask import (
     Blueprint, render_template, request, redirect,
@@ -18,6 +19,7 @@ from utils import (
 from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
+logger = logging.getLogger("prompt_manager.routes")
 
 
 def get_sidebar_data():
@@ -196,12 +198,11 @@ def add():
             db.session.rollback()
             if os.path.exists(path_filename):
                 os.remove(path_filename)
-            current_app.logger.exception("Échec de l'ajout d'un prompt")
+            logger.exception("Échec de l'ajout d'un prompt")
             flash("Erreur lors de l'ajout du prompt.", "error")
             return redirect(url_for('.add'))
 
-        current_app.logger.debug("Prompt %s ajouté (hash %s)",
-                                 new_prompt.id, image_hash)
+        logger.debug("Prompt %s ajouté (hash %s)", new_prompt.id, image_hash)
 
         flash("Prompt ajouté avec succès.", "success")
         return redirect(url_for('.index'))
@@ -471,9 +472,9 @@ def statistiques():
     # Recuperation de la taille de la bdd
     taille_bdd = taille_path(current_app.config['DB_PATH'])
 
-    current_app.logger.debug(
-        "Stats : %d checkpoints, %d loras, %d tags",
-        len(results_checkpoints), len(results_loras), len(results_tags))
+    logger.debug("Stats : %d checkpoints, %d loras, %d tags",
+                 len(results_checkpoints), len(results_loras),
+                 len(results_tags))
 
     return render_template('statistiques.html',
                            nbr_prompts=nbr_prompts,

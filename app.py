@@ -32,9 +32,11 @@ def create_app():
         level=logging.INFO,
         stream=sys.stdout,
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        force=True,
     )
-    # Niveau voulu uniquement pour les logs de l'application
-    app.logger.setLevel(app.config["LOG_LEVEL"])
+    logging.getLogger("prompt_manager").setLevel(app.config["LOG_LEVEL"])
+    logging.getLogger("prompt_manager").info(
+        "Application démarrée (LOG_LEVEL=%s)", app.config["LOG_LEVEL"])
     csrf.init_app(app)
 
     if app.config['SECRET_KEY'] == "dev-insecure-change-me":
