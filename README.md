@@ -59,7 +59,7 @@ flask run
 #### En docker
 ```bash
 # 1) Crée ton fichier .env (voir .env.example)
-# cp .env.example .env
+cp .env.example .env
 
 # 2) Lance le service
 docker compose up -d
@@ -68,6 +68,7 @@ docker compose up -d
 L'application sera accessible à l'adresse : **http://127.0.0.1:5000**
 
 ### ⚠️ En cas de maj de l'image
+récuperer les Maj
 ```bash
 docker compose up -d --build
 ```
@@ -82,9 +83,10 @@ Le `docker-compose.yml` utilise des variables d’environnement. Un exemple est 
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-- **`HOST_PORT`**: port exposé sur ta machine (ex: `5000`)
-- **`DIR_BASE`**: dossier hôte qui contient le dossier `Prompt_manager/` utilisé pour les volumes
+- **`HOST_PORT`**: Port exposé sur ta machine (ex: `5000`)
+- **`DIR_BASE`**: Chemin absolue du dossier `Prompt_manager/` (utilisé pour les volumes)
 - **`VERSION`**: Possibilité d'avoir plusieurs instances de l'app, donc plusieurs images (latest par défaut)
+- **`LOG_LEVEL`**: Paramtre le niveau de log
 
 ## 🔨 Utilitaires
 Il est possible de faire une extraction de la bdd au format json (backup.json)
