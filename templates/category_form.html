@@ -26,7 +26,7 @@
                             <select class="form-select" id="parent_id" name="parent_id">
                                 {% for value, label in category_options %}
                                     <option value="{{ value }}"
-                                            {% if category and category_id == value %}selected{% endif %}>
+                                            {% if category and category.parent_id == value %}selected{% endif %}>
                                         {{ label }}
                                     </option>
                                 {% endfor %}
@@ -39,6 +39,7 @@
                                 {% if category %}Modifier{% else %}Créer{% endif %}
                             </button>
                         </div>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     </form>
                 </div>
             </div>

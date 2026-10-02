@@ -3,13 +3,14 @@
 import json
 import hashlib
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageOps
 from config import ALLOWED_EXTENSIONS
 from models import db, Category
 
+THUMB_SIZE = 400
 
 class ComfyUIImage:
-    """Fonction globale représentant l'image uploadée"""
+    """Représente une image ComfyUI et les métadonnées de son workflow"""
 
     def __init__(self, image_path):
         self.image_path = image_path
@@ -18,17 +19,21 @@ class ComfyUIImage:
 
     def _extract_prompt(self):
         """Extrait le JSON du champ 'prompt' dans les métadonnées PNG"""
-        img = Image.open(self.image_path)
-        raw = img.info.get("prompt") or img.info.get("parameters")
+        with Image.open(self.image_path) as img:
+            raw = img.info.get("prompt") or img.info.get("parameters")
         if not raw:
             raise ValueError("❌ Aucun champ 'prompt' trouvé dans l'image.")
         try:
             data = json.loads(raw)
-            return data
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as err:
             raise ValueError(
                 "❌ Impossible de décoder le JSON du champ 'prompt'."
-            )
+            ) from err
+        if (not isinstance(data, dict)
+                or not all(isinstance(n, dict) for n in data.values())):
+            raise ValueError("Format de workflow inattendu.")
+
+        return data
 
     def _detect_workflow(self):
         """Détecte le type de workflow utilisé."""
@@ -82,21 +87,17 @@ class ComfyUIImage:
         return None
 
     def get_input(self, node, key, default=None):
-        """Retourne la valeur dans imputs pour la clée donnée"""
+        """Retourne la valeur de inputs pour la clé donnée"""
         if not node:
             return default
         return node.get("inputs", {}).get(key, default)
 
     def get_value(self, value):
         """Cherche une clé dans tous les nœuds du prompt (inputs seulement)"""
-
-        for key, node in self.prompt.items():
-            if value in list(node["inputs"].keys()):
-                inputs = node.get("inputs", {})
-
-                if value in inputs and not isinstance(inputs[value], list):
-                    return inputs[value]
-
+        for node in self.prompt.values():
+            candidate = node.get("inputs", {}).get(value)
+            if candidate is not None and not isinstance(candidate, list):
+                return candidate
         return None
 
     # KSampler
@@ -135,7 +136,7 @@ class ComfyUIImage:
                 if isinstance(prompt, str):
                     return prompt
 
-        return "Prompt non trouvé"
+        raise ValueError("Prompt positif introuvable dans le workflow.")
 
     def get_negative_prompt(self):
         """Retourne le prompt négatif"""
@@ -164,12 +165,11 @@ class ComfyUIImage:
         return None
 
     def get_seed(self):
-        """Retourne le seed"""
-
-        seed_temp = self.get_value("seed")
-        if seed_temp is not None:
-            return seed_temp
-        return self.get_value("noise_seed")
+        """Retourne le seed (sous forme de texte)"""
+        seed = self.get_value("seed")
+        if seed is None:
+            seed = self.get_value("noise_seed")
+        return None if seed is None else str(seed)
 
     def get_cliploader(self):
         """Retourne le clip Loader"""
@@ -206,6 +206,8 @@ class ComfyUIImage:
         if node is not None:
             cfg = self.get_input(node, "value")
             return cfg
+
+        return None
 
     def get_sampler(self):
         """Retourne le sampler"""
@@ -259,7 +261,7 @@ class ComfyUIImage:
 
                 index = key.split("_")[-1]
 
-                if not value or value == "None":
+                if not isinstance(value, str) or not value or value == "None":
                     continue
 
                 name = value.split("/")[-1].replace(".safetensors", "")
@@ -320,14 +322,7 @@ class ComfyUIImage:
 
     def optimize_image(self, output_path, quality=90):
         """Convertit l'image en WebP optimisé."""
-
-        with Image.open(self.image_path) as image:
-            image.save(
-                output_path,
-                "WEBP",
-                quality=quality,
-                method=6
-            )
+        save_webp(self.image_path, output_path, quality)
 
 
 class CategoryService:
@@ -371,12 +366,15 @@ class CategoryService:
     @staticmethod
     def move_category(category_id, new_parent_id):
         """Déplace une catégorie (avec vérification de boucles)"""
-        category = Category.query.get(category_id)
+        category = db.session.get(Category, category_id)
         new_parent = (
-            Category.query.get(new_parent_id)
+            db.session.get(Category, new_parent_id)
             if new_parent_id
             else None
         )
+
+        if new_parent_id and new_parent is None:
+            raise ValueError("Catégorie parente introuvable")
 
         # Vérifier qu'on ne crée pas de boucle
         if new_parent and (new_parent.id == category.id
@@ -390,24 +388,26 @@ class CategoryService:
         return True
 
 
-def allowed_file(filename):
+def allowed_file(filename, extensions=None):
     """
     Vérifie si le fichier a une extension autorisée.
     :param filename: Nom du fichier
+    :param extensions: Ensemble d'extensions (ALLOWED_EXTENSIONS par défaut)
     :return: Booléen indiquant si le fichier est autorisé
     """
+    extensions = extensions or ALLOWED_EXTENSIONS
     return ('.' in filename
-            and filename.rsplit('.', 1)[1].lower()
-            in ALLOWED_EXTENSIONS)
+            and filename.rsplit('.', 1)[1].lower() in extensions)
 
 
 def clean_tags(tag_string):
-    """
-    Enlève pour chaque tag les espaces avant et apres
-    :param tag_string: Chaine de caractère représentant tous les tags
-    :return: Chaine de caractère représentant tous les tags sans les espaces
-    """
-    return ','.join(tag.strip().lower() for tag in tag_string.split(','))
+    """Nettoie les tags : espaces, casse, vides et doublons."""
+    tags = dict.fromkeys(
+        tag.strip().lower()
+        for tag in (tag_string or '').split(',')
+        if tag.strip()
+    )
+    return ','.join(tags)
 
 
 def taille_path(path, lisible=True):
@@ -435,20 +435,27 @@ def taille_path(path, lisible=True):
     return f"{taille:.2f} Po"
 
 
+def save_webp(source, dest_path, quality=90):
+    """Enregistre une image (chemin ou fichier ouvert) en WebP."""
+    with Image.open(source) as image:
+        image.save(dest_path, "WEBP", quality=quality, method=6)
+
+
 def convert_to_webp(path_image):
     """Convertit l'image passée en parametre au format webp"""
+    save_webp(path_image, str(Path(path_image).with_suffix(".webp")))
 
-    filename_webp = str(Path(path_image).with_suffix(".webp"))
-    with Image.open(path_image) as image:
-        image.save(
-            filename_webp,
-            "WEBP",
-            quality=90,
-            method=6
-        )
+
+def create_thumbnail(source, dest_path, width=THUMB_SIZE, quality=80):
+    """Crée une miniature à largeur maximale (ratio conservé)."""
+    with Image.open(source) as image:
+        thumb = image.copy()
+        thumb.thumbnail((width, 10_000), Image.Resampling.LANCZOS)
+        thumb.save(dest_path, "WEBP", quality=quality, method=4)
 
 
 def get_file_hash(file_path):
+    """Retourne le hash SHA-256 d'un fichier"""
     sha256 = hashlib.sha256()
 
     with open(file_path, "rb") as file:
@@ -456,3 +463,4 @@ def get_file_hash(file_path):
             sha256.update(chunk)
 
     return sha256.hexdigest()
+

@@ -53,6 +53,7 @@
                         <button type="submit" class="btn btn-sm btn-outline-danger">
                             <i class="fas fa-trash"></i>
                         </button>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     </form>
                 </div>
             </div>
