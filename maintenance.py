@@ -6,7 +6,7 @@ from flask import current_app
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import defer
 from models import Prompt, db
-from utils import convert_to_webp, get_file_hash
+from utils import convert_to_webp, create_thumbnail, get_file_hash
 
 
 def _upload_path(filename):
@@ -82,3 +82,28 @@ def run_maintenance_hash():
 
     total = Prompt.query.filter(Prompt.image_hash.isnot(None)).count()
     print(f"{done} hash calculés, {total} hash dans la base")
+
+def create_missing_thumbs():
+    """Crée les miniatures manquantes (images existantes, restauration...)."""
+    print("**** Maintenance miniatures ****")
+    thumbs_dir = current_app.config['THUMBS_FOLDER']
+    os.makedirs(thumbs_dir, exist_ok=True)
+
+    filenames = [
+        name for (name,) in db.session.query(Prompt.image_filename)
+        .filter(Prompt.image_filename.isnot(None))
+    ]
+
+    created = 0
+    for name in filenames:
+        thumb_path = os.path.join(thumbs_dir, name)
+        source = _upload_path(name)
+        if os.path.exists(thumb_path) or not os.path.exists(source):
+            continue
+        try:
+            create_thumbnail(source, thumb_path)
+            created += 1
+        except OSError as err:
+            print(f"Échec de la miniature pour {name} : {err}")
+
+    print(f"{created} miniature(s) créée(s)")

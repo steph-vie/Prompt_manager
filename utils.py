@@ -3,10 +3,11 @@
 import json
 import hashlib
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageOps
 from config import ALLOWED_EXTENSIONS
 from models import db, Category
 
+THUMB_SIZE = 400
 
 class ComfyUIImage:
     """Représente une image ComfyUI et les métadonnées de son workflow"""
@@ -445,6 +446,14 @@ def convert_to_webp(path_image):
     save_webp(path_image, str(Path(path_image).with_suffix(".webp")))
 
 
+def create_thumbnail(source, dest_path, width=THUMB_SIZE, quality=80):
+    """Crée une miniature à largeur maximale (ratio conservé)."""
+    with Image.open(source) as image:
+        thumb = image.copy()
+        thumb.thumbnail((width, 10_000), Image.Resampling.LANCZOS)
+        thumb.save(dest_path, "WEBP", quality=quality, method=4)
+
+
 def get_file_hash(file_path):
     """Retourne le hash SHA-256 d'un fichier"""
     sha256 = hashlib.sha256()
@@ -454,3 +463,4 @@ def get_file_hash(file_path):
             sha256.update(chunk)
 
     return sha256.hexdigest()
+

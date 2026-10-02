@@ -15,7 +15,7 @@ from config import IMPORT_EXTENSIONS
 from models import db, Prompt, Category
 from utils import (
     ComfyUIImage, allowed_file, clean_tags, CategoryService,
-    taille_path, get_file_hash, save_webp)
+    taille_path, get_file_hash, save_webp, create_thumbnail)
 from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
@@ -167,6 +167,8 @@ def add():
         filename = f"{uuid.uuid4().hex}.webp"
         path_filename = os.path.join(current_app.config['UPLOAD_FOLDER'],
                                      filename)
+        path_thumb_filename = os.path.join(current_app.config['THUMBS_FOLDER'],
+                                     filename)
 
         try:
             comfy.optimize_image(path_filename)
@@ -177,8 +179,13 @@ def add():
                 flash("Le prompt existe déjà dans la base", "error")
                 return redirect(url_for('.index'))
 
+
+
             else:
                 # conversion de l'image en webp
+
+                # Miniature créée depuis le WebP (après le contrôle de doublon)
+                create_thumbnail(path_filename, path_thumb_filename)
 
                 new_prompt = Prompt(
                     prompt=positive_prompt,
@@ -243,8 +250,11 @@ def edit(prompt_id):
             new_filename = f"{uuid.uuid4().hex}.webp"
             new_path = os.path.join(current_app.config['UPLOAD_FOLDER'],
                                     new_filename)
+            new_thumb = os.path.join(current_app.config['THUMBS_FOLDER'],
+                                     new_filename)
             try:
                 save_webp(image, new_path)
+                create_thumbnail(new_path, new_thumb)
             except (OSError, ValueError):
                 flash("Image invalide.", "error")
                 return redirect(request.url)
@@ -256,6 +266,7 @@ def edit(prompt_id):
             ).first()
             if duplicate:
                 os.remove(new_path)
+                os.remove(new_thumb)
                 flash("Cette image existe déjà dans la base.", "error")
                 return redirect(request.url)
 
@@ -267,11 +278,12 @@ def edit(prompt_id):
 
         # Suppression de l'ancienne image seulement après le commit
         if old_filename:
-            try:
-                os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'],
-                                       old_filename))
-            except FileNotFoundError:
-                pass
+            for folder in (current_app.config['UPLOAD_FOLDER'],
+                           current_app.config['THUMBS_FOLDER']):
+                try:
+                    os.remove(os.path.join(folder, old_filename))
+                except FileNotFoundError:
+                    pass
 
         flash("Prompt modifié.", "success")
         return redirect(url_for('.view', prompt_id=prompt.id))
@@ -290,11 +302,12 @@ def delete(prompt_id):
 
     prompt = db.get_or_404(Prompt, prompt_id)
     if prompt.image_filename:
-        try:
-            os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'],
-                                   prompt.image_filename))
-        except FileNotFoundError:
-            pass
+        for folder in (current_app.config['UPLOAD_FOLDER'],
+                       current_app.config['THUMBS_FOLDER']):
+            try:
+                os.remove(os.path.join(folder, prompt.image_filename))
+            except FileNotFoundError:
+                pass
     db.session.delete(prompt)
     db.session.commit()
     flash("Prompt supprimé.", "info")

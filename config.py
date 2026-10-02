@@ -5,6 +5,7 @@ import os
 # Definition des repertoires de travail
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+THUMBS_FOLDER = os.path.join(UPLOAD_FOLDER, 'thumbs')
 DB_FOLDER = os.path.join(BASE_DIR, 'database')
 
 # Extensions de fichiers autorisées pour les images
@@ -23,6 +24,7 @@ class Config:  # pylint: disable=too-few-public-methods
                                                           'prompts.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = UPLOAD_FOLDER
+    THUMBS_FOLDER = THUMBS_FOLDER
     DB_FOLDER = DB_FOLDER
     DB_PATH = os.path.join(DB_FOLDER, 'prompts.db')
     IMG_PER_PAGE = int(os.environ.get("IMG_PER_PAGE", 24))

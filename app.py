@@ -12,7 +12,8 @@ from config import Config
 from models import db
 from routes import register_routes
 from backup import export_backup, restore_backup
-from maintenance import run_maintenance_hash, convert_to_webp_all
+from maintenance import (
+run_maintenance_hash, convert_to_webp_all, create_missing_thumbs)
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 MIGRATIONS_DIR = os.path.join(BASE_DIR, "migrations")
@@ -56,6 +57,9 @@ def create_app():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
 
+    if not os.path.exists(app.config['THUMBS_FOLDER']):
+        os.makedirs(app.config['THUMBS_FOLDER'])
+
     if not os.path.exists(app.config['DB_FOLDER']):
         os.makedirs(app.config['DB_FOLDER'])
 
@@ -81,9 +85,10 @@ def create_app():
     @app.cli.command("maintenance")
     @with_appcontext
     def maintenance_command():
-        """Conversion WebP + calcul des hash manquants."""
+        """Conversion WebP, hash et miniatures manquants."""
         convert_to_webp_all()
         run_maintenance_hash()
+        create_missing_thumbs()
 
     return app
 

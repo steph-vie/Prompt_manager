@@ -89,19 +89,68 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 - **`LOG_LEVEL`**: Paramtre le niveau de log
 
 ## 🔨 Utilitaires
-Il est possible de faire une extraction de la bdd au format json (backup.json)
-```bash
-python.exe -m flask backup
-```
-Pour restaurer un fichier backup.json
-```bash
-python.exe -m flask restore
-```
---help pour plus d'infos
 
-Conversion des images stockées au format webp
+Ces commandes passent par la CLI Flask. Avec Docker, préfixe-les par `docker compose exec app` ; en local, utilise `flask ...` (ou `python.exe -m flask ...` sous Windows). `--help` donne le détail de chaque commande.
+
+### 💾 Sauvegarde
+
+Extraction de la base, avec ou sans les images :
+
 ```bash
-python.exe -m flask convert_all
+# Docker : écris dans /app/database (volume) pour retrouver le fichier
+# sur ta machine, dans ${DIR_BASE}/database/
+docker compose exec app flask backup --output /app/database/backup.zip
+
+# En local
+python.exe -m flask backup --output backup.zip
+```
+
+- `.zip` : la base (`backup.json`) **et** les images (`uploads/`)
+- `.json` : la base seule (`backup.json` par défaut)
+- Les miniatures ne sont pas sauvegardées : elles sont régénérées par la maintenance
+
+### ♻️ Restauration
+
+```bash
+# Docker
+docker compose exec app flask restore --input /app/database/backup.zip
+
+# En local
+python.exe -m flask restore --input backup.zip
+```
+
+- Accepte un `.zip` (base + images) ou un `.json` (base seule)
+- **Remplace tout le contenu de la base** (prompts et catégories)
+- Atomique : en cas d'erreur, la base reste inchangée
+- Les anciens `backup.json` restent compatibles
+
+Après la restauration d'un ancien `backup.json` (sans hash d'image) ou d'un `.zip`, lance la maintenance pour recalculer les hash et régénérer les miniatures.
+
+### 🧹 Maintenance
+
+```bash
+# Docker
+docker compose exec app flask maintenance
+
+# En local
+python.exe -m flask maintenance
+```
+
+Elle :
+1. convertit au format WebP les images qui ne le sont pas encore (l'ancien fichier est supprimé) ;
+2. calcule le hash des images qui n'en ont pas (détection des doublons) ;
+3. crée les miniatures manquantes dans `static/uploads/thumbs/`.
+
+Elle peut être relancée sans risque à tout moment. Les fichiers introuvables et les doublons sont signalés dans les logs, sans bloquer l'exécution.
+
+- **Docker** : elle est lancée automatiquement à chaque démarrage du conteneur.
+- **En local** : `flask run` ne la lance pas, pense à l'exécuter après une mise à jour.
+
+### 🩺 Suivi du service
+
+Le conteneur dispose d'un `HEALTHCHECK` qui interroge la route `/health` (accès à la base compris). Après un démarrage, compte environ une minute : la maintenance s'exécute avant le serveur, et peut durer plus longtemps sur une grosse bibliothèque.
+
+
 ```
 
 ## 📜 Licence
