@@ -1,7 +1,8 @@
+name: prompt_manager_${VERSION:-latest}
 services:
   app:
     build: .
-    container_name: prompt_manager_${VERSION-latest}
+    container_name: prompt_manager_${VERSION:-latest}
     image: prompt-manager:${VERSION:-latest}
     environment:
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY requise dans .env}
