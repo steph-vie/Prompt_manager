@@ -41,7 +41,6 @@
           <div class="panel-head">
             <h2><i class="fas fa-folder me-2"></i>Classement</h2>
           </div>
-
           <div class="mb-4">
             <label class="form-label" for="categorie">Catégorie</label>
             <select class="form-select" name="categorie" id="categorie">
@@ -50,12 +49,16 @@
               {% endfor %}
             </select>
           </div>
-
           <div>
             <label class="form-label" for="tags">Tags</label>
-            <input type="text" name="tags" id="tags" class="form-control"
-                   placeholder="portrait, paysage, nuit">
-            <div class="form-text">Sépare les tags par des virgules.</div>
+            <div class="tag-autocomplete">
+              <input type="text" name="tags" id="tags" class="form-control"
+                    autocomplete="off" spellcheck="false"
+                    data-tags='{{ tag_counts|tojson }}'
+                    placeholder="portrait, paysage, nuit">
+              <ul class="tag-suggestions" id="tags-suggestions" role="listbox" hidden></ul>
+            </div>
+            <div class="form-text">Sépare les tags par des virgules. Les tags existants sont proposés pendant la saisie.</div>
           </div>
         </section>
 
@@ -93,4 +96,5 @@
     });
   });
 </script>
+<script src="{{ url_for('static', filename='js/tags-autocomplete.js') }}"></script>
 {% endblock %}
