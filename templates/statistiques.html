@@ -1,144 +1,159 @@
 {% extends 'base.html' %}
 {% block title %}Statistiques{% endblock %}
-<!-- TODO: a revoir car si trop d'infos, la page sera enorme  -->
 {% block content %}
-<div class="container-fluid px-4 py-3">
-    <!-- En-tête avec titre -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="display-5 fw-bold text-dark mb-2">Statistiques</h1>
-                    <div class="d-flex align-items-center text-muted">
-                        <i class="fas fa-chart-bar me-2"></i>
-                        <span class="fs-5">Vue d'ensemble des données</span>
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <a href="{{ url_for('prompt.index') }}"
-                       class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Retour
-                    </a>
-                </div>
-            </div>
-        </div>
+
+{# Une ligne de classement : (libellé, nombre[, id catégorie]) #}
+{% macro bar_row(item, kind, top) %}
+  <li class="bar-row">
+    <div class="bar-line">
+      {% if kind == 'checkpoint' or kind == 'lora' %}
+        <a class="bar-label" href="{{ url_for('prompt.index', q=item[0]) }}" title="{{ item[0] }}">{{ item[0] }}</a>
+      {% elif kind == 'tag' %}
+        <a class="bar-label" href="{{ url_for('prompt.index', tag=item[0]) }}">{{ item[0] }}</a>
+      {% elif kind == 'category' %}
+        <a class="bar-label" href="{{ url_for('prompt.index', category_id=item[2]) }}" title="{{ item[0] }}">{{ item[0] }}</a>
+      {% else %}
+        <span class="bar-label">{{ item[0] }}</span>
+      {% endif %}
+      <span class="bar-count">{{ item[1] }}</span>
     </div>
-
-    <!-- Contenu principal -->
-    <div class="row g-4">
-        <div class="col-lg-12">
-            <div class="card border-3 mb-2 card-stats">
-                    <div class="card-body p-4">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="icon-circle bg-primary bg-opacity-10 me-3">
-                                <i class="fas fa-database text-primary fs-4"></i>
-                            </div>
-                            <h4 class="mb-0 text-primary fw-bold">Résumé Général</h4>
-                        </div>
-
-                        <div class="param-card bg-gradient rounded-4 p-3" style="background: linear-gradient(135deg, #e7f1ff 0%, #f0f7ff 100%);">
-                            <span class="badge bg-primary fs-6 px-2 py-2 font-monospace"
-                                data-bs-toggle="tooltip"
-                                title="Nombre de prompts">
-                                <i class="fa-solid fa-images text-white me-2"></i>{{ nbr_prompts }}</span>
-                            <span class="badge bg-primary fs-6 px-2 py-2 font-monospace" 
-                                data-bs-toggle="tooltip"
-                                title="Taille du dossier d'upload">
-                                <i class="fa-solid fa-folder-open text-white me-2"></i>{{ taille_upload_folder }}</span>
-                            <span class="badge bg-primary fs-6 px-2 py-2 font-monospace"
-                                data-bs-toggle="tooltip"
-                                title="Taille de la base de données"><i class="fa-solid fa-database text-white me-2"></i>{{ taille_bdd }}</span>
-                        </div>
-                    </div>
-            </div>
-        </div>
-        <!-- Tableau des checkpoints -->
-        <div class="col-lg-4">
-            <div class="card border-3 mb-4 card-stats">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-success bg-opacity-10 me-3">
-                            <i class="fas fa-bookmark text-success fs-4"></i>
-                        </div>
-                        <h4 class="mb-0 fw-bold">Checkpoints{% if list_checkpoints|length > 0 %} ({{ list_checkpoints | length }}){% endif %}</h4>
-                    </div>
-
-                    {% if list_checkpoints %}
-                    
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                            {% for checkpoint, count in list_checkpoints %}
-                                <a class="badge bg-success bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',q=checkpoint) }}">
-                                {{ checkpoint[:50] }}{% if checkpoint|length > 50 %}...{% endif %} [{{ count }}]
-                                </a>
-                            {% endfor %}
-                            </div>
-                       
-                    {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-exclamation-circle text-muted fs-2 mb-3"></i>
-                            <p class="text-muted mb-0">Aucun checkpoint disponible</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Tableau des LoRAs -->
-        <div class="col-lg-4">
-            
-            
-            <div class="card border-3 mb-4 card-stats">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-info bg-opacity-10 me-3">
-                            <i class="fas fa-layer-group text-info fs-4"></i>
-                        </div>
-                        <h4 class="mb-0 fw-bold">LoRAs{% if loras|length > 0 %} ({{ loras | length }}){% endif %}</h4>
-                    </div>
-                    {% if loras %}
-                        <div class="d-flex flex-wrap gap-2 mt-2">
-                        {% for lora, count in loras %}
-                            <a class="badge bg-info bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',q=lora) }}">
-                                                {{ lora[:30] }}{% if lora|length > 30 %}...{% endif %} [{{ count }}]
-                            </a>
-                        {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-exclamation-circle text-muted fs-2 mb-3"></i>
-                            <p class="text-muted mb-0">Aucun Loras disponible</p>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Tableau des tags -->
-        <div class="col-lg-4">
-            
-            <div class="card border-3 mb-3 mb-4 card-stats">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-circle bg-secondary bg-opacity-10 me-3">
-                            <i class="fas fa-tags text-secondary fs-4"></i>
-                        </div>
-                        <h4 class="mb-0 fw-bold">Tags{% if list_tags|length > 0 %} ({{ list_tags | length }}) {% endif %} </h4>
-                        </div>
-                        {% if list_tags %}
-                        <div class="d-flex flex-wrap gap-2 mt-2">
-                                    {% for tag, count in list_tags %}
-                                            <a class="badge bg-secondary bg-opacity-25 fs-6 px-3 py-2 font-monospace link-like-text" href="{{ url_for('prompt.index',tag=tag ) }}"><i class="fas fa-tag me-1"></i>{{ tag.strip() }} [{{ count }}]</a>
-                                    {% endfor %}
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4">
-                            <i class="fas fa-exclamation-circle text-muted fs-2 mb-3"></i>
-                            <p class="text-muted mb-0">Aucun tags</p>
-                        </div>
-                        {% endif %}
-                </div>
-            </div>
-        </div>   
+    <div class="bar-track">
+      <div class="bar-fill" style="width: {{ (item[1] * 100 / top)|round(1) }}%"></div>
     </div>
+  </li>
+{% endmacro %}
+
+{# Classement : 10 premiers visibles, le reste repliable #}
+{% macro ranking(items, kind, empty_text, limit=10) %}
+  {% if items %}
+    {% set top = items[0][1] %}
+    <ul class="bar-list">
+      {% for item in items[:limit] %}{{ bar_row(item, kind, top) }}{% endfor %}
+    </ul>
+    {% if items|length > limit %}
+      <details class="bar-more">
+        <summary>Voir les {{ items|length - limit }} autres</summary>
+        <ul class="bar-list">
+          {% for item in items[limit:] %}{{ bar_row(item, kind, top) }}{% endfor %}
+        </ul>
+      </details>
+    {% endif %}
+  {% else %}
+    <p class="stat-empty">{{ empty_text }}</p>
+  {% endif %}
+{% endmacro %}
+
+<div class="stats-page">
+
+  <header class="view-head">
+    <h1 class="form-title mb-0">Statistiques</h1>
+    <a href="{{ url_for('prompt.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-2"></i>Retour
+    </a>
+  </header>
+
+  <!-- Chiffres clés -->
+  <div class="stat-tiles">
+    <div class="stat-tile">
+      <span class="stat-label">Prompts</span>
+      <span class="stat-value">{{ nbr_prompts }}</span>
+    </div>
+    <div class="stat-tile">
+      <span class="stat-label">Avec image</span>
+      <span class="stat-value">{{ nbr_with_image }}</span>
+    </div>
+    <div class="stat-tile" title="Images et miniatures">
+      <span class="stat-label">Dossier d'images</span>
+      <span class="stat-value">{{ taille_upload_folder }}</span>
+    </div>
+    <div class="stat-tile">
+      <span class="stat-label">Base de données</span>
+      <span class="stat-value">{{ taille_bdd }}</span>
+    </div>
+    <div class="stat-tile {% if nbr_no_category %}stat-warn{% endif %}">
+      <span class="stat-label">Sans catégorie</span>
+      <span class="stat-value">{{ nbr_no_category }}</span>
+    </div>
+    <div class="stat-tile {% if nbr_no_tags %}stat-warn{% endif %}">
+      <span class="stat-label">Sans tags</span>
+      <span class="stat-value">{{ nbr_no_tags }}</span>
+    </div>
+  </div>
+
+  <!-- Activité -->
+  <section class="panel">
+    <div class="panel-head">
+      <h2><i class="fas fa-calendar me-2"></i>Prompts ajoutés par mois</h2>
+      <span class="text-muted small">12 derniers mois</span>
+    </div>
+    <div class="month-chart">
+      {% for key, n in months %}
+      <div class="month-col" title="{{ n }} prompt(s)">
+        <span class="month-n">{{ n if n else '' }}</span>
+        <div class="month-track">
+          <div class="month-bar" style="height: {{ (n * 100 / max_month)|round(1) if max_month else 0 }}%"></div>
+        </div>
+        <span class="month-label">{{ key[5:7] }}/{{ key[2:4] }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Modèles, LoRAs, tags -->
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <section class="panel h-100">
+        <div class="panel-head">
+          <h2><i class="fas fa-bookmark me-2"></i>Checkpoints{% if list_checkpoints %} ({{ list_checkpoints|length }}){% endif %}</h2>
+        </div>
+        {{ ranking(list_checkpoints, 'checkpoint', 'Aucun checkpoint disponible') }}
+      </section>
+    </div>
+    <div class="col-lg-4">
+      <section class="panel h-100">
+        <div class="panel-head">
+          <h2><i class="fas fa-layer-group me-2"></i>LoRAs{% if loras %} ({{ loras|length }}){% endif %}</h2>
+        </div>
+        {{ ranking(loras, 'lora', 'Aucune LoRA disponible') }}
+      </section>
+    </div>
+    <div class="col-lg-4">
+      <section class="panel h-100">
+        <div class="panel-head">
+          <h2><i class="fas fa-tags me-2"></i>Tags{% if list_tags %} ({{ list_tags|length }}){% endif %}</h2>
+        </div>
+        {{ ranking(list_tags, 'tag', 'Aucun tag') }}
+      </section>
+    </div>
+  </div>
+
+  <!-- Catégories et réglages -->
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <section class="panel h-100">
+        <div class="panel-head">
+          <h2><i class="fas fa-folder me-2"></i>Catégories</h2>
+        </div>
+        {{ ranking(list_categories, 'category', 'Aucun prompt classé') }}
+      </section>
+    </div>
+    <div class="col-lg-4">
+      <section class="panel h-100">
+        <div class="panel-head">
+          <h2><i class="fas fa-wave-square me-2"></i>Samplers</h2>
+        </div>
+        {{ ranking(list_samplers, 'plain', 'Aucun sampler') }}
+      </section>
+    </div>
+    <div class="col-lg-4">
+      <section class="panel h-100">
+        <div class="panel-head">
+          <h2><i class="fas fa-clock me-2"></i>Schedulers</h2>
+        </div>
+        {{ ranking(list_schedulers, 'plain', 'Aucun scheduler') }}
+      </section>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
