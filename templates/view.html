@@ -79,7 +79,7 @@
         </div>
         <dl class="param-grid">
           {% for label, value in [('Seed', prompt.seed), ('Steps', prompt.steps), ('CFG', prompt.cfg), ('Sampler', prompt.sampler), ('Scheduler', prompt.scheduler)] %}
-          <div class="param">
+          <div class="param{% if label == 'Seed' %} param-wide{% endif %}">
             <dt>{{ label }}</dt>
             <dd>{{ value if value is not none else '—' }}</dd>
           </div>
