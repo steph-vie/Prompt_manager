@@ -44,7 +44,7 @@
             </button>
         </form>
     </div>
-
+    {% include 'active_filters.html' %}
   <!-- Messages flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
