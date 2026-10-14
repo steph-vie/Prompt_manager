@@ -1,64 +1,104 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}Modifier le prompt {{ prompt.id }}{% endblock %}
 {% block content %}
-<div class="container-fluid py-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-white border-0 pb-0">
-          <h4 class="mb-0 text-dark fw-bold">Modifier le prompt</h4>
-        </div>
-        <div class="card-body p-4">
-          <form method="POST" enctype="multipart/form-data">
-            <div class="mb-4">
-              <label class="form-label fw-semibold text-dark">Catégorie</label>
-              <select class="form-select form-select-lg border-2" name="categorie" id="categorie">
-                {% for value, label in liste_categories %}
-                <option value="{{ value }}"
-                    {% if prompt.category_id == value %}selected{% endif %}>
-                  {{ label }}
-                </option>
-                {% endfor %}
-              </select>
-            </div>
-            
-            <div class="mb-4">
-              <label class="form-label fw-semibold text-dark">Tags</label>
-              <input type="text" name="tags" class="form-control form-control-lg border-2" 
-                     value="{{ prompt.tags }}" 
-                     placeholder="Séparez les tags par des virgules">
-              <div class="form-text">Utilisez des virgules pour séparer les différents tags</div>
-            </div>
-            
-            <div class="mb-4">
-              <label class="form-label fw-semibold text-dark">Image d'illustration</label>
-              <input type="file" name="image" class="form-control form-control-lg border-2" 
-                     accept="image/*">
-              <div class="form-text">Laissez vide pour conserver l'image actuelle</div>
-              
-              {% if prompt.image_filename %}
-              <div class="mt-3">
-                <p class="text-muted mb-2">Image actuelle :</p>
-                <img src="{{ url_for('static', filename='uploads/' ~ prompt.image_filename) }}" 
-                     class="img-fluid rounded shadow-sm" 
-                     style="max-width: 200px; max-height: 150px; object-fit: cover;">
-              </div>
-              {% endif %}
-            </div>
-            
-            <div class="d-flex gap-3 pt-3">
-              <button type="submit" class="btn btn-primary btn-lg px-4">
-                <i class="fas fa-save me-2"></i>Enregistrer
-              </button>
-              <a href="{{ url_for('prompt.view', prompt_id=prompt.id) }}" 
-                 class="btn btn-outline-secondary btn-lg px-4">
-                <i class="fas fa-times me-2"></i>Annuler
-              </a>
-            </div>
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          </form>
+<div class="form-page">
+  <h1 class="form-title">Modifier le prompt {{ prompt.id }}</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST" enctype="multipart/form-data">
+    <div class="row g-4">
+
+      <!-- Image -->
+      <div class="col-lg-5">
+        <section class="panel">
+          <div class="panel-head">
+            <h2><i class="fas fa-image me-2"></i>Image</h2>
+          </div>
+          <div class="preview-box" id="preview-box">
+            {% if prompt.image_filename %}
+              <img id="preview-img" alt="Image actuelle"
+                   src="{{ url_for('static', filename='uploads/' ~ prompt.image_filename) }}">
+            {% else %}
+              <img id="preview-img" alt="" hidden>
+              <p id="preview-empty" class="mb-0">Aucune image</p>
+            {% endif %}
+          </div>
+          <input type="file" name="image" id="image" class="form-control mt-3"
+                 accept="image/png,image/jpeg">
+          <div class="form-text">Laisse vide pour conserver l'image actuelle.</div>
+        </section>
+      </div>
+
+      <!-- Classement -->
+      <div class="col-lg-7">
+        <section class="panel">
+          <div class="panel-head">
+            <h2><i class="fas fa-folder me-2"></i>Classement</h2>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label" for="categorie">Catégorie</label>
+            <select class="form-select" name="categorie" id="categorie">
+              {% for value, label in liste_categories %}
+              <option value="{{ value }}" {% if prompt.category_id == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label" for="tags">Tags</label>
+            <input type="text" name="tags" id="tags" class="form-control"
+                   value="{{ prompt.tags or '' }}"
+                   placeholder="portrait, paysage, nuit">
+            <div class="form-text">Sépare les tags par des virgules.</div>
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer
+          </button>
+          <a href="{{ url_for('prompt.view', prompt_id=prompt.id) }}" class="btn btn-outline-secondary">Annuler</a>
         </div>
       </div>
     </div>
-  </div>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var input = document.getElementById('image');
+    var img = document.getElementById('preview-img');
+    var empty = document.getElementById('preview-empty');
+    var original = img.getAttribute('src');
+
+    // Aperçu de la nouvelle image ; retour à l'image actuelle si on annule le choix
+    input.addEventListener('change', function () {
+      var file = input.files[0];
+      if (file) {
+        img.src = URL.createObjectURL(file);
+        img.hidden = false;
+        if (empty) empty.hidden = true;
+      } else if (original) {
+        img.src = original;
+      } else {
+        img.hidden = true;
+        if (empty) empty.hidden = false;
+      }
+    });
+  });
+</script>
 {% endblock %}
