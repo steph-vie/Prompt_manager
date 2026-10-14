@@ -73,7 +73,8 @@
         <div class="prompt-image-wrapper">
             <img src="{{ url_for('static', filename='uploads/thumbs/' + prompt.image_filename) }}"
                  alt="{{ prompt.id }}"
-                 loading="lazy">
+                 loading="lazy">{% if prompt.checkpoint %}<div class="prompt-checkpoint">{{ prompt.checkpoint }}</div>{% endif %}
+                 
             <div class="prompt-date">
                 {{ prompt.created_at.strftime('%d/%m/%Y') }}
             </div>

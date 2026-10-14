@@ -1,174 +1,189 @@
 {% extends 'base.html' %}
-{% block title %}{{ prompt.id }}{% endblock %}
+{% block title %}Prompt {{ prompt.id }}{% endblock %}
 {% block content %}
-<div class="container-fluid px-4 py-3 mb-4">
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-        <div>
-            <div class="text-muted small">
-                <i class="fas fa-folder me-1"></i>
-                {% if prompt.category %}{{ prompt.category.get_path() }}{% else %}Pas de catégorie{% endif %}
-                <span class="mx-2">•</span>
-                <i class="fas fa-clock me-1"></i>
-                {{ prompt.created_at.strftime('%d/%m/%Y') }}
-            </div>
+<div class="view-page">
+
+  <!-- Barre d'infos + actions -->
+  <header class="view-head">
+    <div class="view-meta">
+      <span><i class="fas fa-folder me-2"></i>{% if prompt.category %}{{ prompt.category.get_path() }}{% else %}Sans catégorie{% endif %}</span>
+      <span><i class="fas fa-clock me-2"></i>{{ prompt.created_at.strftime('%d/%m/%Y') }}</span>
+    </div>
+    <div class="view-actions">
+      <a href="{{ url_for('prompt.index') }}" class="btn btn-outline-secondary" title="Retour à la liste">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <a href="{{ url_for('prompt.edit', prompt_id=prompt.id) }}" class="btn btn-primary" title="Modifier">
+        <i class="fas fa-edit"></i>
+      </a>
+      <form method="POST"
+            action="{{ url_for('prompt.delete', prompt_id=prompt.id) }}"
+            onsubmit="return confirm('Supprimer définitivement ce prompt ?');">
+        <button type="submit" class="btn btn-outline-danger" title="Supprimer">
+          <i class="fas fa-trash"></i>
+        </button>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      </form>
+    </div>
+  </header>
+
+  <div class="row g-4">
+
+    <!-- Image -->
+    <div class="col-lg-5">
+      <div class="sticky-preview">
+        {% if prompt.image_filename %}
+          <a href="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
+             target="_blank" rel="noopener" class="image-frame" title="Ouvrir en taille réelle">
+            <img src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
+                 alt="Image du prompt {{ prompt.id }}">
+          </a>
+        {% else %}
+          <div class="image-frame image-empty">
+            <i class="fas fa-image fs-1 mb-2"></i>
+            <p class="mb-0">Aucune image</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Infos de génération -->
+    <div class="col-lg-7">
+
+      <!-- Prompt positif -->
+      <section class="panel panel-positive">
+        <div class="panel-head">
+          <h2><i class="fas fa-plus-circle me-2"></i>Prompt positif</h2>
+          <button type="button" class="btn btn-sm btn-outline-secondary" id="copy-positive"
+                  title="Copier le prompt positif dans le presse-papier">
+            <i class="fas fa-copy me-1"></i><span>Copier</span>
+          </button>
+        </div>
+        <pre class="prompt-text" id="prompt-positive">{{ prompt.prompt }}</pre>
+      </section>
+
+      <!-- Prompt négatif -->
+      {% if prompt.neg_prompt %}
+      <section class="panel panel-negative">
+        <div class="panel-head">
+          <h2><i class="fas fa-minus-circle me-2"></i>Prompt négatif</h2>
+        </div>
+        <pre class="prompt-text">{{ prompt.neg_prompt }}</pre>
+      </section>
+      {% endif %}
+
+      <!-- Paramètres -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2><i class="fas fa-sliders me-2"></i>Paramètres</h2>
+        </div>
+        <dl class="param-grid">
+          {% for label, value in [('Seed', prompt.seed), ('Steps', prompt.steps), ('CFG', prompt.cfg), ('Sampler', prompt.sampler), ('Scheduler', prompt.scheduler)] %}
+          <div class="param">
+            <dt>{{ label }}</dt>
+            <dd>{{ value if value is not none else '—' }}</dd>
+          </div>
+          {% endfor %}
+        </dl>
+      </section>
+
+      <!-- Modèle, LoRAs, tags -->
+      <section class="panel">
+        <div class="chip-group">
+          <h3>Checkpoint</h3>
+          {% if prompt.checkpoint %}
+            <a class="chip" href="{{ url_for('prompt.index', q=prompt.checkpoint) }}">{{ prompt.checkpoint }}</a>
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
         </div>
 
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('prompt.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <a href="{{ url_for('prompt.edit', prompt_id=prompt.id) }}" class="btn btn-primary">
-                <i class="fas fa-edit"></i>
-            </a>
-            <form method="POST"
-                  action="{{ url_for('prompt.delete', prompt_id=prompt.id) }}"
-                  onsubmit="return confirm('Supprimer définitivement ce prompt ?');">
-                <button type="submit" class="btn btn-danger">
-                    <i class="fas fa-trash"></i>
-                </button>
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            </form>
+        {% if prompt.loras and prompt.loras != "None" %}
+        <div class="chip-group">
+          <h3>LoRAs</h3>
+          <div class="chips">
+            {% for lora, weight in prompt.loras.items() %}
+              <a class="chip" href="{{ url_for('prompt.index', q=lora) }}">{{ lora }} <small>{{ weight }}</small></a>
+            {% endfor %}
+          </div>
         </div>
+        {% endif %}
 
+        {% if prompt.tags %}
+        <div class="chip-group">
+          <h3>Tags</h3>
+          <div class="chips">
+            {% for tag in prompt.tags.split(',') %}
+              <a class="chip chip-tag" href="{{ url_for('prompt.index', tag=tag.strip()) }}">
+                <i class="fas fa-tag me-1"></i>{{ tag.strip() }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </section>
+
+      {% if prompt.prompt_raw %}
+      <details class="json-block">
+        <summary>Voir le JSON du workflow</summary>
+        <pre>{{ prompt.prompt_raw | tojson(indent=4) }}</pre>
+      </details>
+      {% endif %}
 
     </div>
+  </div>
 </div>
-<div class="container-fluid px-4">
-    <div class="row min-vh-100">
-        <div class="col-lg-4">
-            <div class="sticky-preview">
-                    {% if prompt.image_filename %}
-                        <img
-                            src="{{ url_for('static', filename='uploads/' + prompt.image_filename) }}"
-                            alt="Prompt image"
-                            class="img-fluid"
-                        >
-                    {% else %}
-                        <div class="text-muted text-center">
-                            <i class="fas fa-image fs-1 mb-2"></i>
-                            <p>Aucune image</p>
-                        </div>
-                    {% endif %}
-            </div>
-        </div>
-        <div class="col-lg-8 ps-lg-4">
-            <div class="mb-4">
-                <h4 class="fw-bold text-success mb-2 border-3">
-                    <i class="fas fa-plus-circle me-2"></i>Prompt positif
-                </h4>
-                <pre class="bg-light border border-success p-3 border-2" style="white-space: pre-wrap">{{ prompt.prompt }}</pre>
+{% endblock %}
 
-                {% if prompt.neg_prompt %}
-                    <h4 class="fw-bold text-danger mt-4 mb-2 border-3">
-                        <i class="fas fa-minus-circle me-2"></i>Prompt négatif
-                    </h4>
-                    <pre class="bg-light border border-danger p-3 border-2" style="white-space: pre-wrap">{{ prompt.neg_prompt }}</pre>
-                {% endif %}
-                </div>
-                <div class="mb-4">
-                    <h4 class="fw-bold mb-3">
-                        <i class="fas fa-cog me-2"></i>Paramètres
-                    </h4>
-                    <div class="row g-4">
-                        <div class="col-md-3">
-                            <div class="border border-3 p-3">
-                                <strong>Seed</strong>
-                                <div class="font-monospace">{{ prompt.seed }}</div>
-                            </div>
-                        </div>
+{% block scripts %}
+<script>
+  // Copie avec repli : navigator.clipboard n'existe qu'en HTTPS ou sur localhost
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      try {
+        document.execCommand('copy') ? resolve() : reject();
+      } catch (err) {
+        reject(err);
+      } finally {
+        document.body.removeChild(area);
+      }
+    });
+  }
 
-                        <div class="col-md-3">
-                            <div class="border border-3 p-3">
-                                <strong>Sampler</strong>
-                                <div class="font-monospace">{{ prompt.sampler }}</div>
-                            </div>
-                        </div>
+  document.addEventListener('DOMContentLoaded', function () {
+    var button = document.getElementById('copy-positive');
+    var source = document.getElementById('prompt-positive');
+    if (!button || !source) return;
 
-                        <div class="col-md-2">
-                            <div class="border border-3 p-3">
-                                <strong>Scheduler</strong>
-                                <div class="font-monospace">{{ prompt.scheduler }}</div>
-                            </div>
-                        </div>
+    var label = button.querySelector('span');
+    var icon = button.querySelector('i');
 
-                        <div class="col-md-2">
-                            <div class="border border-3 p-3">
-                                <strong>Cfg</strong>
-                                <div class="font-monospace">{{ prompt.cfg }}</div>
-                            </div>
-                        </div>
+    function flash(text, iconClass, cssClass) {
+      label.textContent = text;
+      icon.className = 'fas ' + iconClass + ' me-1';
+      button.classList.add(cssClass);
+      setTimeout(function () {
+        label.textContent = 'Copier';
+        icon.className = 'fas fa-copy me-1';
+        button.classList.remove(cssClass);
+      }, 1800);
+    }
 
-                        <div class="col-md-2">
-                            <div class="border border-3 p-3">
-                                <strong>Steps</strong>
-                                <div class="font-monospace">{{ prompt.steps }}</div>
-                            </div>
-                        </div>
-                        </div> <!-- fermeture row g-4 -->
-                </div> <!-- fermeture mb-4 Paramètres -->
-            <!-- Cadre commun pour Checkpoint, LoRAs et Tags -->
-            <div class="border border-3 p-3">
-
-                <div class="row">
-
-                    <!-- Checkpoint -->
-                    <div class="col-5 p-3">
-                        <div>
-                           <strong>Checkpoint</strong>
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                <a class="badge bg-secondary link-like-text white-text"
-                                href="{{ url_for('prompt.index',q=prompt.checkpoint) }}">
-                                    {{ prompt.checkpoint }}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- LoRAs -->
-                    {% if prompt.loras and prompt.loras != "None" %}
-                    <div class="col-7 p-3">
-                        <div>
-                            <strong>LoRAs</strong>
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                {% for lora, weight in prompt.loras.items() %}
-                                    <a class="badge bg-secondary link-like-text white-text"
-                                    href="{{ url_for('prompt.index',q=lora) }}">
-                                        {{ lora }} ({{ weight }})
-                                    </a>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- Tags -->
-                    {% if prompt.tags %}
-                    <div class="p-3">
-                        <strong>
-                            <i class="fas fa-tags me-2"></i>Tags
-                        </strong>
-                        <div class="d-flex flex-wrap gap-2">
-                            {% for tag in prompt.tags.split(',') %}
-                                <a class="badge bg-secondary link-like-text white-text"
-                                href="{{ url_for('prompt.index',tag=tag.strip() ) }}">
-                                    <i class="fas fa-tag me-1"></i>{{ tag.strip() }}
-                                </a>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-                
-            {%if prompt.prompt_raw %}
-                <details class="json-block">
-                    <summary>Voir le JSON</summary>
-                    <pre>{{ prompt.prompt_raw | tojson(indent=4) }}</pre>
-                </details>
-            {% endif %}
-        </div> <!-- col-lg-8 -->
-    </div> <!-- row -->
-    </div>
-</div> <!-- container-fluid -->
-
+    button.addEventListener('click', function () {
+      copyText(source.textContent.trim()).then(
+        function () { flash('Copié', 'fa-check', 'copied'); },
+        function () { flash('Échec', 'fa-xmark', 'copy-failed'); }
+      );
+    });
+  });
+</script>
 {% endblock %}

@@ -1,24 +1,96 @@
 {% extends 'base.html' %}
+{% block title %}Nouveau prompt{% endblock %}
 {% block content %}
-<form method="POST" enctype="multipart/form-data">
-  <label class="form-label">Categorie</label>
-    <select class="form-select" name="categorie" id="categorie">
-      {% for value, label in liste_categories %}
-      <option value="{{ value }}">
-        {{ label }}
-      </option>
-      {% endfor %}
-    </select>
-  <div class="mb-3">
-    <label class="form-label">Tags (séparés par virgules)</label>
-    <input type="text" name="tags" class="form-control">
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Image d’illustration</label>
-    <input type="file" name="image" class="form-control">
-  </div>
-  <button type="submit" class="btn btn-success">Enregistrer</button>
-  <a href="{{ url_for('prompt.index') }}" class="btn btn-danger">Annuler</a>
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-</form>
+<div class="form-page">
+  <h1 class="form-title">Nouveau prompt</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST" enctype="multipart/form-data">
+    <div class="row g-4">
+
+      <!-- Image -->
+      <div class="col-lg-5">
+        <section class="panel">
+          <div class="panel-head">
+            <h2><i class="fas fa-image me-2"></i>Image ComfyUI</h2>
+          </div>
+          <div class="preview-box" id="preview-box">
+            <img id="preview-img" alt="" hidden>
+            <p id="preview-empty" class="mb-0">
+              <i class="fas fa-cloud-arrow-up fs-2 d-block mb-2"></i>
+              Aucune image sélectionnée
+            </p>
+          </div>
+          <input type="file" name="image" id="image" class="form-control mt-3"
+                 accept="image/png" required>
+          <div class="form-text">PNG généré par ComfyUI : le prompt et les paramètres sont lus automatiquement.</div>
+        </section>
+      </div>
+
+      <!-- Classement -->
+      <div class="col-lg-7">
+        <section class="panel">
+          <div class="panel-head">
+            <h2><i class="fas fa-folder me-2"></i>Classement</h2>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label" for="categorie">Catégorie</label>
+            <select class="form-select" name="categorie" id="categorie">
+              {% for value, label in liste_categories %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label" for="tags">Tags</label>
+            <input type="text" name="tags" id="tags" class="form-control"
+                   placeholder="portrait, paysage, nuit">
+            <div class="form-text">Sépare les tags par des virgules.</div>
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Enregistrer
+          </button>
+          <a href="{{ url_for('prompt.index') }}" class="btn btn-outline-secondary">Annuler</a>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var input = document.getElementById('image');
+    var img = document.getElementById('preview-img');
+    var empty = document.getElementById('preview-empty');
+
+    input.addEventListener('change', function () {
+      var file = input.files[0];
+      if (!file) {
+        img.hidden = true;
+        empty.hidden = false;
+        return;
+      }
+      if (img.src) URL.revokeObjectURL(img.src);
+      img.src = URL.createObjectURL(file);
+      img.hidden = false;
+      empty.hidden = true;
+    });
+  });
+</script>
 {% endblock %}
