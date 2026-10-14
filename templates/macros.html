@@ -1,28 +1,27 @@
-<!-- MACRO pour afficher l'arbre des catégories récursivement -->
-{% macro render_category_tree(category, selected_category, category_prompt_counts={}, category_children_counts={}) %}
-    {% set prompt_count = category_prompt_counts.get(category.id, 0) %}
+<!-- MACRO pour afficher l'arbre des catégories (panneau de filtres), récursivement -->
+{% macro render_category_tree(category, selected_category, category_prompt_counts={}, category_children_counts={}, selected_tag=None) %}
+    {% set count = category_prompt_counts.get(category.id, 0) %}
     {% set child_count = category_children_counts.get(category.id, 0) %}
-    <div class="category-item {% if selected_category and selected_category.id == category.id %}active{% endif %}"
-         onclick="location.href='{{ url_for('prompt.index', category_id=category.id) }}'">
-
-        {% if child_count > 0 %}
-            <i class="fas fa-folder"></i>
-        {% else %}
-            <i class="fas fa-folder-open"></i>
-        {% endif %}
-
-        {{ category.name }}
-
-        {% if prompt_count > 0 %}
-            <small class="text-muted">({{ prompt_count }})</small>
-        {% endif %}
-    </div>
+    {% set is_active = selected_category and selected_category.id == category.id %}
+    {% set link = url_for('prompt.index', category_id=category.id, tag=selected_tag) %}
 
     {% if child_count > 0 %}
-        <div class="category-children">
-            {% for child in category.children %}
-                {{ render_category_tree(child, selected_category, category_prompt_counts, category_children_counts) }}
-            {% endfor %}
+        <details class="cat-node" data-name="{{ category.name|lower }}"
+                 {% if is_active or (selected_category and category.is_ancestor_of(selected_category)) %}open{% endif %}>
+            <summary>
+                <a class="cat-link {% if is_active %}active{% endif %}" href="{{ link }}">{{ category.name }}</a>
+                {% if count > 0 %}<small class="cat-count">{{ count }}</small>{% endif %}
+            </summary>
+            <div class="cat-children">
+                {% for child in category.children %}
+                    {{ render_category_tree(child, selected_category, category_prompt_counts, category_children_counts, selected_tag) }}
+                {% endfor %}
+            </div>
+        </details>
+    {% else %}
+        <div class="cat-leaf" data-name="{{ category.name|lower }}">
+            <a class="cat-link {% if is_active %}active{% endif %}" href="{{ link }}">{{ category.name }}</a>
+            {% if count > 0 %}<small class="cat-count">{{ count }}</small>{% endif %}
         </div>
     {% endif %}
 {% endmacro %}

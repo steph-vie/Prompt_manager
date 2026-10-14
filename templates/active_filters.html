@@ -1,0 +1,27 @@
+{# Filtres actifs de la liste : chaque pastille se retire d'un clic #}
+{% if selected_category or selected_tag or query %}
+<div class="active-filters">
+  {% if selected_category %}
+    <a class="filter-chip" title="Retirer ce filtre"
+       href="{{ url_for('prompt.index', tag=selected_tag, q=query or None) }}">
+      <i class="fas fa-folder me-1"></i>{{ selected_category.name }}
+      <i class="fas fa-xmark ms-2"></i>
+    </a>
+  {% endif %}
+  {% if selected_tag %}
+    <a class="filter-chip" title="Retirer ce filtre"
+       href="{{ url_for('prompt.index', category_id=selected_category.id if selected_category else None, q=query or None) }}">
+      <i class="fas fa-tag me-1"></i>{{ selected_tag }}
+      <i class="fas fa-xmark ms-2"></i>
+    </a>
+  {% endif %}
+  {% if query %}
+    <a class="filter-chip" title="Retirer ce filtre"
+       href="{{ url_for('prompt.index', category_id=selected_category.id if selected_category else None, tag=selected_tag) }}">
+      <i class="fas fa-magnifying-glass me-1"></i>{{ query }}
+      <i class="fas fa-xmark ms-2"></i>
+    </a>
+  {% endif %}
+  <span class="text-muted ms-1">{{ pagination.total }} résultat(s)</span>
+</div>
+{% endif %}

@@ -31,29 +31,38 @@ def tag_filter(tag):
 
 def get_sidebar_data():
     """Données communes du panneau Filtres (catégories + tags)."""
-    category_prompt_counts = dict(
+    direct_counts = dict(
         db.session.query(Prompt.category_id, func.count(Prompt.id))
         .filter(Prompt.category_id.isnot(None))
         .group_by(Prompt.category_id)
         .all()
     )
+    parents = dict(db.session.query(Category.id, Category.parent_id).all())
+
+    # Cumul : on remonte la hiérarchie (le garde-fou évite toute boucle)
+    category_prompt_counts = {}
+    for cat_id, count in direct_counts.items():
+        current, seen = cat_id, set()
+        while current is not None and current not in seen:
+            seen.add(current)
+            category_prompt_counts[current] = (
+                category_prompt_counts.get(current, 0) + count)
+            current = parents.get(current)
+
     category_children_counts = dict(
-        db.session.query(Category.parent_id, func.count(Category.id))
-        .filter(Category.parent_id.isnot(None))
-        .group_by(Category.parent_id)
-        .all()
-    )
+        Counter(parent for parent in parents.values() if parent is not None))
+
     # On ne charge que la colonne tags, pas les objets complets
-    all_tags = {
+    tag_counts = Counter(
         tag.strip().lower()
         for (tags,) in db.session.query(Prompt.tags)
         for tag in (tags or '').split(',')
         if tag.strip()
-    }
+    )
     return {
         "category_prompt_counts": category_prompt_counts,
         "category_children_counts": category_children_counts,
-        "tags": sorted(all_tags),
+        "tag_counts": sorted(tag_counts.items(), key=lambda x: (-x[1], x[0])),
     }
 
 
