@@ -4,6 +4,7 @@ import os
 import uuid
 import logging
 from collections import Counter
+from datetime import date
 from flask import (
     Blueprint, render_template, request, redirect,
     url_for, flash, current_app, jsonify
@@ -20,6 +21,7 @@ from version import __version__
 
 prompt_bp = Blueprint('prompt', __name__)
 logger = logging.getLogger("prompt_manager.routes")
+
 
 def tag_filter(tag):
     """Filtre sur un tag exact (et non sur une simple sous-chaîne)."""
@@ -53,6 +55,50 @@ def get_sidebar_data():
         "category_children_counts": category_children_counts,
         "tags": sorted(all_tags),
     }
+
+
+def _count(*criteria):
+    """Nombre de prompts correspondant aux critères
+    (sans charger prompt_raw).
+    """
+    query = db.session.query(func.count(Prompt.id))
+    if criteria:
+        query = query.filter(*criteria)
+    return query.scalar() or 0
+
+
+def _count_by(column):
+    """Valeurs d'une colonne avec leur nombre d'occurrences (décroissant)."""
+    return (
+        db.session.query(column, func.count(Prompt.id))
+        .filter(column.isnot(None))
+        .group_by(column)
+        .order_by(func.count(Prompt.id).desc(), column)
+        .all()
+    )
+
+
+def _monthly_counts(months=12):
+    """Prompts ajoutés par mois sur les `months`
+    derniers mois (mois vides inclus).
+    """
+    month_expr = func.strftime('%Y-%m', Prompt.created_at)
+    found = dict(
+        db.session.query(month_expr, func.count(Prompt.id))
+        .filter(Prompt.created_at.isnot(None))
+        .group_by(month_expr)
+        .all()
+    )
+    today = date.today()
+    year, month = today.year, today.month
+    keys = []
+    for _ in range(months):
+        keys.append(f"{year:04d}-{month:02d}")
+        month -= 1
+        if month == 0:
+            year, month = year - 1, 12
+    keys.reverse()
+    return [(key, found.get(key, 0)) for key in keys]
 
 
 @prompt_bp.app_context_processor
@@ -168,7 +214,7 @@ def add():
         path_filename = os.path.join(current_app.config['UPLOAD_FOLDER'],
                                      filename)
         path_thumb_filename = os.path.join(current_app.config['THUMBS_FOLDER'],
-                                     filename)
+                                           filename)
 
         try:
             comfy.optimize_image(path_filename)
@@ -178,8 +224,6 @@ def add():
                 os.remove(path_filename)
                 flash("Le prompt existe déjà dans la base", "error")
                 return redirect(url_for('.index'))
-
-
 
             else:
                 # conversion de l'image en webp
@@ -437,55 +481,54 @@ def api_categories_tree():
 
 # -----------------------------------------------------------------------------------
 
+
 @prompt_bp.route('/statistiques')
 def statistiques():
     """Génère les données du panneau des statistiques"""
-    # Récupération des checkpoints
-    nbr_prompts = Prompt.query.count()
+    # Totaux
+    nbr_prompts = _count()
+    nbr_with_image = _count(Prompt.image_filename.isnot(None))
+    nbr_no_category = _count(Prompt.category_id.is_(None))
+    nbr_no_tags = _count((Prompt.tags.is_(None)) | (Prompt.tags == ''))
 
-    results_checkpoints = (
-        db.session.query(
-            Prompt.checkpoint,
-            func.count(Prompt.checkpoint).label("count"),
-        )
-        .filter(Prompt.checkpoint.isnot(None))
-        .group_by(Prompt.checkpoint)
-        .order_by(func.count(Prompt.checkpoint).desc())
-        .all()
-    )
-    # Recuperation des Loras
+    # Classements
+    results_checkpoints = _count_by(Prompt.checkpoint)
+    results_samplers = _count_by(Prompt.sampler)
+    results_schedulers = _count_by(Prompt.scheduler)
+
+    # Catégories : (chemin complet, nombre de prompts, id)
+    categories = {cat.id: cat for cat in Category.query.all()}
+    results_categories = [
+        (categories[cat_id].get_path(), count, cat_id)
+        for cat_id, count in _count_by(Prompt.category_id)
+        if cat_id in categories
+    ]
+
+    # LoRAs
     result_loras = db.session.query(Prompt.loras).all()
-
     counter = Counter(
         lora
         for (loras_dict,) in result_loras
         if loras_dict
         for lora in loras_dict
     )
+    results_loras = sorted(counter.items(), key=lambda x: x[1], reverse=True)
 
-    results_loras = sorted(
-        counter.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
-
-    # Récupération des tags
+    # Tags
     all_tags = Counter(
         tag.strip().lower()
         for (tags,) in db.session.query(Prompt.tags).all()
         for tag in (tags or '').split(',')
         if tag.strip()
     )
+    results_tags = sorted(all_tags.items(), key=lambda x: x[1], reverse=True)
 
-    results_tags = sorted(
-        all_tags.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
+    # Activité mensuelle
+    months = _monthly_counts()
+    max_month = max((count for _, count in months), default=0)
 
-    # Récupération de la taille du dossier des images
+    # Tailles (dossier d'upload = images + miniatures)
     taille_upload_folder = taille_path(current_app.config['UPLOAD_FOLDER'])
-    # Recuperation de la taille de la bdd
     taille_bdd = taille_path(current_app.config['DB_PATH'])
 
     logger.debug("Stats : %d checkpoints, %d loras, %d tags",
@@ -494,13 +537,22 @@ def statistiques():
 
     return render_template('statistiques.html',
                            nbr_prompts=nbr_prompts,
+                           nbr_with_image=nbr_with_image,
+                           nbr_no_category=nbr_no_category,
+                           nbr_no_tags=nbr_no_tags,
                            list_checkpoints=results_checkpoints,
+                           list_samplers=results_samplers,
+                           list_schedulers=results_schedulers,
+                           list_categories=results_categories,
                            loras=results_loras,
                            list_tags=results_tags,
+                           months=months,
+                           max_month=max_month,
                            taille_bdd=taille_bdd,
                            taille_upload_folder=taille_upload_folder)
 
 # -----------------------------------------------------------------------------------
+
 
 @prompt_bp.route('/health')
 def health():
